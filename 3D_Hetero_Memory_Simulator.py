@@ -91,7 +91,7 @@ class MatMul(Op):
         M, K = a
         K2, N = b
         assert K == K2
-        return M * N * K  # count MACs
+        return M * N * K  # MAC FLOPs 估算：这里 MAC 被算成 1 个 flop，而不是 2 个 flop（有的定义会乘以 2）
 
     def required_tensors(self) -> List[str]:
         return [self.A, self.B]
@@ -114,7 +114,7 @@ class PatchEmbed(Op):
         num_patches = n_patches_h * n_patches_w
         patch_size = C * self.patch_h * self.patch_w
         out_dim = shapes[self.weight_name].dims[1]
-        return num_patches * patch_size * out_dim
+        return num_patches * patch_size * out_dim   # patching FLOPs 估算：每个 patch 做一次矩阵乘法，patch_size × out_dim 乘法，乘上 patch 数量
 
     def required_tensors(self) -> List[str]:
         return [self.input_img, self.weight_name]
