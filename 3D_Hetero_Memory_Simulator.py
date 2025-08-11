@@ -34,7 +34,7 @@ class Tensor:
     name: str
     shape: TensorShape
     size_bytes: int
-    device: str = "dram"  # 'dram' or 'rram'
+    device: str = "dram"  # 'dram' or 'rram' lzh sb
 
 # ----------------------------- Memory models -----------------------------
 
