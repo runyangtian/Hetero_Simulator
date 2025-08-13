@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     # 5. Print Results
     print("\n--- Simulation Complete ---")
-    print(f"Configuration: {num_layers}-layer Transformer encoder on a 3D-DRAM, 3D-ReRAM architecture.")
+    print(f"Configuration: Transformer encoder on a 3D-DRAM, 3D-ReRAM architecture.")
     print(f"Total Cycles: {stats.cycles:,}")
     print(f"Total MACs: {stats.macs:,}")
     print(f"Total Energy: {stats.energy_nj:,.2f} nJ")

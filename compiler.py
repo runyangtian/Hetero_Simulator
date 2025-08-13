@@ -38,7 +38,6 @@ class SimpleCompiler:
                 else: # Fallback to RRAM
                     placements[tname] = 'rram'
                     tensor.device = 'rram'
-        print(placements)
         return placements
 
     def compile(self) -> List[Dict[str, Any]]:
