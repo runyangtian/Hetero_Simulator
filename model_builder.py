@@ -1,11 +1,7 @@
-# FILE: model_builder.py
-# ----------------------
-# Contains helper functions to construct specific neural network models.
-
 from model import Model
 from operations import LayerNorm, MatMul, Attention, BinaryOp, UnaryOp
 
-def build_transformer_encoder(num_layers=6, seq_len=196, embed_dim=768, bits_act=16, bits_weight=4) -> Model:
+def build_transformer_encoder(num_layers=6, seq_len=196, embed_dim=768, bits_act=16, bits_weight=16) -> Model:
     """
     Constructs a Model with `num_layers` of a standard Transformer encoder.
     Layer structure: norm -> attention -> add -> norm -> ffn -> add

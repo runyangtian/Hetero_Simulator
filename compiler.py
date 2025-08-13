@@ -1,7 +1,3 @@
-# FILE: compiler.py
-# -----------------
-# Implements the compiler, which maps tensors to memory and schedules operations.
-
 import math
 from typing import List, Dict, Any
 from datatypes import MemoryDevice, ComputeUnit
@@ -28,21 +24,21 @@ class SimpleCompiler:
         """Places tensors onto memory devices based on simple heuristics."""
         placements = {}
         for tname, tensor in self.model.tensors.items():
-            # Prioritize placing weights on RRAM if possible
-            if tname.startswith('W') or tensor.device == 'rram':
+            if tname.startswith(('W', 'K', 'V')) or tensor.device == 'rram': # W，KV cache优先放在ReRAM
                 if self.rram.allocate(tensor.size_bits):
                     placements[tname] = 'rram'
                     tensor.device = 'rram'
                 else: # Fallback to DRAM
                     placements[tname] = 'dram'
                     tensor.device = 'dram'
-            else: # Place activations on DRAM by default
+            else: # Q优先放在DRAM
                 if self.dram.allocate(tensor.size_bits):
                     placements[tname] = 'dram'
                     tensor.device = 'dram'
                 else: # Fallback to RRAM
                     placements[tname] = 'rram'
                     tensor.device = 'rram'
+        print(placements)
         return placements
 
     def compile(self) -> List[Dict[str, Any]]:

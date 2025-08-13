@@ -1,7 +1,3 @@
-# FILE: datatypes.py
-# ------------------
-# Contains basic data structures for tensors, hardware components, and statistics.
-
 from dataclasses import dataclass, field
 import math
 import numpy as np

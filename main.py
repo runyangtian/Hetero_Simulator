@@ -1,14 +1,5 @@
-# FILE: main.py
-# -------------
-# Main entry point for the simulation. Sets up hardware, builds the model,
-# runs the compiler and simulator, and prints the results.
-
 import time
 import sys
-
-# Add path to other modules if they are in a different directory
-# sys.path.append('path/to/your/modules') 
-
 from datatypes import MemoryDevice, ComputeUnit, ACU
 from model_builder import build_transformer_encoder
 from compiler import SimpleCompiler
@@ -16,7 +7,6 @@ from simulator import Simulator
 
 if __name__ == '__main__':
     # 1. Define Hardware Parameters
-    # Parameters are converted to bit-level units for consistency
     rram = MemoryDevice(
         name='3D_RRAM',
         capacity_bits=32 * 1024 * 1024 * 8,       # 32 MB
@@ -47,18 +37,16 @@ if __name__ == '__main__':
     
     # 2. Build the Model
     print("Building model...")
-    # Using low-precision weights (4-bit) and activations (16-bit)
     model = build_transformer_encoder(
         num_layers=6,
         seq_len=196,
         embed_dim=768,
         bits_act=16,
-        bits_weight=4
+        bits_weight=16
     )
 
     # 3. Compile the Model
     print("Compiling schedule...")
-    # The compiler needs the bit precision of activations for tiling calculations
     compiler = SimpleCompiler(
         model, rram, dram, cu,
         bits_per_element=16,
@@ -79,13 +67,13 @@ if __name__ == '__main__':
 
     # 5. Print Results
     print("\n--- Simulation Complete ---")
-    print("Configuration: 6-layer Transformer encoder on a PIM+ACU architecture.")
+    print(f"Configuration: {num_layers}-layer Transformer encoder on a 3D-DRAM, 3D-ReRAM architecture.")
     print(f"Total Cycles: {stats.cycles:,}")
     print(f"Total MACs: {stats.macs:,}")
     print(f"Total Energy: {stats.energy_nj:,.2f} nJ")
     print(f"Total Bits Read: {stats.bits_read:,}")
     print(f"Total Bits Written: {stats.bits_written:,}")
-    print(f"Simulation Wall Time: {t1 - t0:.3f} s")
+    print(f"Simulation Wall Time: {t1 - t0:.3f} s") # 当你运行程序时，wall time 是从程序开始执行到结束所经历的总时间，不管程序内部的多线程、等待、系统调度等细节，也就是你站在旁边看着程序开始，直到结束所用的时间。
 
     # Performance Estimates
     freq_ghz = 1.0  # Assuming 1 GHz clock frequency

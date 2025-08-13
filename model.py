@@ -1,7 +1,3 @@
-# FILE: model.py
-# --------------
-# Defines the Model class, which represents the entire neural network graph.
-
 import numpy as np
 from typing import List, Tuple, Dict
 from datatypes import Tensor, TensorShape

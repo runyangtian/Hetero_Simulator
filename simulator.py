@@ -1,7 +1,3 @@
-# FILE: simulator.py
-# ------------------
-# The core simulation engine that executes a schedule and calculates performance.
-
 import math
 import numpy as np
 from typing import List, Dict, Any

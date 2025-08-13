@@ -1,7 +1,3 @@
-# FILE: operations.py
-# -------------------
-# Defines the neural network operations as classes.
-
 import numpy as np
 from typing import List, Dict
 from datatypes import TensorShape
