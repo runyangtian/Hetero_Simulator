@@ -1,0 +1,38 @@
+{
+"description": "Minimal ViT encoder with patch embed + 1 Transformer layer (B=1, 224x224, patch=16, D=768)",
+    "tensors": [
+        {"name": "img", "shape": [3, 224, 224], "bits": 16, "device": "dram"},
+        {"name": "W_embed", "shape": [768, 768], "bits": 4, "device": "rram"},
+        {"name": "tokens", "shape": [196, 768], "bits": 16, "device": "dram"},
+        {"name": "W_q_0", "shape": [768, 768], "bits": 4, "device": "rram"},
+        {"name": "W_k_0", "shape": [768, 768], "bits": 4, "device": "rram"},
+        {"name": "W_v_0", "shape": [768, 768], "bits": 4, "device": "rram"},
+        {"name": "Q_0", "shape": [196, 768], "bits": 16, "device": "dram"},
+        {"name": "K_0", "shape": [196, 768], "bits": 16, "device": "dram"},
+        {"name": "V_0", "shape": [196, 768], "bits": 16, "device": "dram"},
+        {"name": "norm1_out_0", "shape": [1, 196, 768], "bits": 16, "device": "dram"},
+        {"name": "attn_out_0", "shape": [1, 196, 768], "bits": 16, "device": "dram"},
+        {"name": "resid1_0", "shape": [1, 196, 768], "bits": 16, "device": "dram"},
+        {"name": "norm2_out_0", "shape": [1, 196, 768], "bits": 16, "device": "dram"},
+        {"name": "W1_0", "shape": [768, 3072], "bits": 4, "device": "rram"},
+        {"name": "W2_0", "shape": [3072, 768], "bits": 4, "device": "rram"},
+        {"name": "ff1_0", "shape": [196, 3072], "bits": 16, "device": "dram"},
+        {"name": "ff1_act_0", "shape": [196, 3072], "bits": 16, "device": "dram"},
+        {"name": "ff2_0", "shape": [196, 768], "bits": 16, "device": "dram"},
+        {"name": "resid2_0", "shape": [1, 196, 768], "bits": 16, "device": "dram"}
+    ],
+    "ops": [
+        {"type": "PatchEmbed", "input_img": "img", "patch_w": 16, "patch_h": 16, "out": "tokens", "weight": "W_embed"},
+        {"type": "LayerNorm", "A": "tokens", "C": "norm1_out_0"},
+        {"type": "MatMul", "A": "tokens", "B": "W_q_0", "C": "Q_0"},
+        {"type": "MatMul", "A": "tokens", "B": "W_k_0", "C": "K_0"},
+        {"type": "MatMul", "A": "tokens", "B": "W_v_0", "C": "V_0"},
+        {"type": "Attention", "Q": "Q_0", "K": "K_0", "V": "V_0", "out": "attn_out_0"},
+        {"type": "Binary", "kind": "ADD", "A": "attn_out_0", "B": "norm1_out_0", "C": "resid1_0"},
+        {"type": "LayerNorm", "A": "resid1_0", "C": "norm2_out_0"},
+        {"type": "MatMul", "A": "resid1_0", "B": "W1_0", "C": "ff1_0"},
+        {"type": "Unary", "kind": "GELU", "A": "ff1_0", "C": "ff1_act_0"},
+        {"type": "MatMul", "A": "ff1_act_0", "B": "W2_0", "C": "ff2_0"},
+        {"type": "Binary", "kind": "ADD", "A": "ff2_0", "B": "resid1_0", "C": "resid2_0"}
+    ]
+}

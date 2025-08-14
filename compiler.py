@@ -1,37 +1,29 @@
-import math
+# 将高级模型描述转换为底层的、可模拟的指令序列。
+
 from typing import List, Dict, Any
-from datatypes import MemoryDevice, ComputeUnit
 from model import Model
+from hardware_models import MemoryDevice, ComputeUnit
 from operations import MatMul, PatchEmbed, LayerNorm, Attention, SoftmaxOp, UnaryOp, BinaryOp
 
 class SimpleCompiler:
-    """
-    A simple compiler that places tensors and creates an execution schedule.
-    It decomposes high-level ops like Attention into smaller, simulatable steps.
-    """
     def __init__(self, model: Model, rram: MemoryDevice, dram: MemoryDevice, cu: ComputeUnit,
                  bits_per_element=32, tile_K=256, tile_M=64, tile_N=64):
         self.model = model
-        self.rram = rram
-        self.dram = dram
-        self.cu = cu
-        self.tile_K = tile_K
-        self.tile_M = tile_M
-        self.tile_N = tile_N
+        self.rram, self.dram, self.cu = rram, dram, cu
+        self.tile_K, self.tile_M, self.tile_N = tile_K, tile_M, tile_N
         self.bpe_bits = bits_per_element
 
     def place(self) -> Dict[str, str]:
-        """Places tensors onto memory devices based on simple heuristics."""
         placements = {}
         for tname, tensor in self.model.tensors.items():
-            if tname.startswith(('W', 'K', 'V')) or tensor.device == 'rram': # W，KV cache优先放在ReRAM
+            if tname.startswith('W') or tensor.device == 'rram':
                 if self.rram.allocate(tensor.size_bits):
                     placements[tname] = 'rram'
                     tensor.device = 'rram'
-                else: # Fallback to DRAM
+                else: # Fallback to DRAM if RRAM is full
                     placements[tname] = 'dram'
                     tensor.device = 'dram'
-            else: # Q优先放在DRAM
+            else:
                 if self.dram.allocate(tensor.size_bits):
                     placements[tname] = 'dram'
                     tensor.device = 'dram'
@@ -41,12 +33,10 @@ class SimpleCompiler:
         return placements
 
     def compile(self) -> List[Dict[str, Any]]:
-        """Generates an executable schedule from the model's operations."""
-        placements = self.place()
+        self.place()
         schedule = []
         for op in self.model.ops:
             if isinstance(op, MatMul):
-                # Tile MatMul operations
                 dims = self.model.shapes[op.A].dims
                 M, K = dims[-2], dims[-1]
                 K2, N = self.model.shapes[op.B].dims
@@ -60,22 +50,12 @@ class SimpleCompiler:
                             schedule.append({
                                 'op': op, 'type': 'matmul_tile',
                                 'm0': m0, 'n0': n0, 'k0': k0,
-                                'msize': msize, 'nsize': nsize, 'ksize': ksize
+                                'msize': msize, 'nsize': nsize, 'ksize': ksize,
+                                'A_dev': self.model.tensors[op.A].device,
+                                'B_dev': self.model.tensors[op.B].device
                             })
-            # Decompose high-level ops into simpler types for the simulator
-            elif isinstance(op, Attention):
-                schedule.append({'op': op, 'type': 'attention'})
-            # Pass-through for ops understood by the ACU/Simulator
-            elif isinstance(op, PatchEmbed):
-                schedule.append({'op': op, 'type': 'patch_embed'})
-            elif isinstance(op, LayerNorm):
-                schedule.append({'op': op, 'type': 'layernorm'})
-            elif isinstance(op, SoftmaxOp):
-                schedule.append({'op': op, 'type': 'softmax'})
-            elif isinstance(op, UnaryOp):
-                schedule.append({'op': op, 'type': 'unary'})
-            elif isinstance(op, BinaryOp):
-                schedule.append({'op': op, 'type': 'binary'})
+            elif isinstance(op, (PatchEmbed, LayerNorm, Attention, SoftmaxOp, UnaryOp, BinaryOp)):
+                 schedule.append({'op': op, 'type': op.__class__.__name__.lower()})
             else:
                 schedule.append({'op': op, 'type': 'unknown'})
         return schedule
