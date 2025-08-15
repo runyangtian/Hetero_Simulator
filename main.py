@@ -4,7 +4,7 @@ import argparse
 import json
 import time
 
-from hardware_models import MemoryDevice, ComputeUnit, ACU
+from hardware_models import MemoryDevice, ComputeUnit#, ACU
 from model import Model
 from loader import JSONModelLoader
 from compiler import SimpleCompiler
@@ -21,7 +21,7 @@ def main():
     dram = MemoryDevice(name='3D_DRAM', capacity_bits=256*1024*1024*8, read_bw_bits_per_cycle=8192*8, write_bw_bits_per_cycle=4096*8,
                         read_energy_per_bit=0.002/8, write_energy_per_bit=0.003/8, access_latency_cycles=50)
     cu = ComputeUnit(macs_per_cycle=8192, energy_per_mac_nj=0.00015)
-    acu = ACU(throughput_elements_per_cycle=256, energy_per_element_nj=0.0005, call_latency_cycles=2)
+    # acu = ACU(throughput_elements_per_cycle=256, energy_per_element_nj=0.0005, call_latency_cycles=2)
 
     # Load model
     if args.json:
@@ -37,7 +37,7 @@ def main():
     schedule = compiler.compile()
 
     # Simulate
-    sim = Simulator(model, schedule, rram, dram, cu, acu, bits_per_element=16)
+    sim = Simulator(model, schedule, rram, dram, cu, bits_per_element=16)
     
     t0 = time.time()
     stats = sim.run()

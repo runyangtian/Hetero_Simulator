@@ -82,3 +82,4 @@ class Stats:
     bits_read: int = 0
     bits_written: int = 0
     breakdown: Dict[str, float] = field(default_factory=dict)
+    # cycles_breakdown: Dict[str, int] = field(default_factory=dict) 

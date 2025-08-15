@@ -13,6 +13,32 @@ class Op:
     def required_tensors(self) -> List[str]:
         return []
 
+class UnaryOp(Op):
+    def __init__(self, kind: str, A: str, C: str):
+        super().__init__(f"{kind}:{A}->{C}")
+        self.kind, self.A, self.C = kind.upper(), A, C
+
+    def flops(self, shapes: Dict[str, TensorShape]) -> int:
+        return int(np.prod(shapes[self.A].dims))
+
+    def required_tensors(self) -> List[str]:
+        return [self.A]
+
+class BinaryOp(Op):
+    def __init__(self, kind: str, A: str, B: str, C: str):
+        super().__init__(f"{kind}:{A},{B}->{C}")
+        self.kind, self.A, self.B, self.C = kind.upper(), A, B, C
+
+    def flops(self, shapes: Dict[str, TensorShape]) -> int:
+        dimsA = shapes[self.A].dims
+        dimsB = shapes[self.B].dims     
+        # assert shapes[self.A].dims == shapes[self.B].dims
+        assert dimsA[-2:] == dimsB[-2:], f"BinaryOp input shapes not compatible: {dimsA} vs {dimsB}"
+        return int(np.prod(shapes[self.A].dims))
+
+    def required_tensors(self) -> List[str]:
+        return [self.A, self.B]
+
 class MatMul(Op):
     def __init__(self, A: str, B: str, C: str):
         super().__init__(f"MatMul:{A}x{B}->{C}")
@@ -44,55 +70,52 @@ class PatchEmbed(Op):
     def required_tensors(self) -> List[str]:
         return [self.input_img, self.weight_name]
 
-class UnaryOp(Op):
-    def __init__(self, kind: str, A: str, C: str):
-        super().__init__(f"{kind}:{A}->{C}")
-        self.kind, self.A, self.C = kind.upper(), A, C
-
-    def flops(self, shapes: Dict[str, TensorShape]) -> int:
-        return int(np.prod(shapes[self.A].dims))
-
-    def required_tensors(self) -> List[str]:
-        return [self.A]
-
-class BinaryOp(Op):
-    def __init__(self, kind: str, A: str, B: str, C: str):
-        super().__init__(f"{kind}:{A},{B}->{C}")
-        self.kind, self.A, self.B, self.C = kind.upper(), A, B, C
-
-    def flops(self, shapes: Dict[str, TensorShape]) -> int:
-        assert shapes[self.A].dims == shapes[self.B].dims
-        return int(np.prod(shapes[self.A].dims))
-
-    def required_tensors(self) -> List[str]:
-        return [self.A, self.B]
-
-class SoftmaxOp(Op):
+class SoftmaxOp(UnaryOp):
     def __init__(self, input_tensor: str, axis: int, output_tensor: str):
-        super().__init__(f"Softmax:{input_tensor}-> {output_tensor} axis={axis}")
-        self.input, self.axis, self.output = input_tensor, axis, output_tensor
+        super().__init__('SOFTMAX', input_tensor, output_tensor)
+        self.axis = axis
 
-    def flops(self, shapes: Dict[str, TensorShape]) -> int:
-        return int(np.prod(shapes[self.input].dims))
-
-    def required_tensors(self) -> List[str]:
-        return [self.input]
-
-class LayerNorm(Op):
+class LayerNorm(UnaryOp):
     def __init__(self, A: str, C: str):
-        super().__init__(f"LayerNorm:{A}->{C}")
-        self.A, self.C = A, C
+        super().__init__('LAYERNORM', A, C)
 
-    def flops(self, shapes: Dict[str, TensorShape]) -> int:
-        return int(np.prod(shapes[self.A].dims))
+class GeluOp(UnaryOp):
+    def __init__(self, A: str, C: str):
+        super().__init__('GELU', A, C)
 
-    def required_tensors(self) -> List[str]:
-        return [self.A]
+class ReluOp(UnaryOp):
+    def __init__(self, A: str, C: str):
+        super().__init__('RELU', A, C)
 
-class Attention(Op):
-    def __init__(self, Q: str, K: str, V: str, out: str):
-        super().__init__(f"Attention:{Q},{K},{V}->{out}")
-        self.Q, self.K, self.V, self.out = Q, K, V, out
+class SigmoidOp(UnaryOp):
+    def __init__(self, A: str, C: str):
+        super().__init__('SIGMOID', A, C)
 
-    def required_tensors(self) -> List[str]:
-        return [self.Q, self.K, self.V]
+class TanhOp(UnaryOp):
+    def __init__(self, A: str, C: str):
+        super().__init__('TANH', A, C)
+
+class AddOp(BinaryOp):
+    def __init__(self, A: str, B: str, C: str):
+        super().__init__('ADD', A, B, C)
+
+class SubOp(BinaryOp):
+    def __init__(self, A: str, B: str, C: str):
+        super().__init__('SUB', A, B, C)
+
+class MulOp(BinaryOp):
+    def __init__(self, A: str, B: str, C: str):
+        super().__init__('MUL', A, B, C)
+
+class DivOp(BinaryOp):
+    def __init__(self, A: str, B: str, C: str):
+        super().__init__('DIV', A, B, C)
+
+class UCIeOp:
+    def __init__(self, src, dst, size_bits):
+        self.src = src
+        self.dst = dst
+        self.size_bits = size_bits
+
+    def __repr__(self):
+        return f"UCIeOp(src={self.src}, dst={self.dst}, bits={self.size_bits})"

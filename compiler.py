@@ -3,7 +3,11 @@
 from typing import List, Dict, Any
 from model import Model
 from hardware_models import MemoryDevice, ComputeUnit
-from operations import MatMul, PatchEmbed, LayerNorm, Attention, SoftmaxOp, UnaryOp, BinaryOp
+from operations import (
+    MatMul, PatchEmbed, LayerNorm,
+    SoftmaxOp, GeluOp, ReluOp, SigmoidOp, TanhOp,
+    AddOp, SubOp, MulOp, DivOp, UCIeOp
+)
 
 class SimpleCompiler:
     def __init__(self, model: Model, rram: MemoryDevice, dram: MemoryDevice, cu: ComputeUnit,
@@ -35,7 +39,9 @@ class SimpleCompiler:
     def compile(self) -> List[Dict[str, Any]]:
         self.place()
         schedule = []
+
         for op in self.model.ops:
+            # MatMul 仍然需要 tiling
             if isinstance(op, MatMul):
                 dims = self.model.shapes[op.A].dims
                 M, K = dims[-2], dims[-1]
@@ -48,14 +54,18 @@ class SimpleCompiler:
                         for k0 in range(0, K, self.tile_K):
                             ksize = min(self.tile_K, K - k0)
                             schedule.append({
-                                'op': op, 'type': 'matmul_tile',
+                                'op': op,
+                                'type': 'matmul_tile',
                                 'm0': m0, 'n0': n0, 'k0': k0,
                                 'msize': msize, 'nsize': nsize, 'ksize': ksize,
                                 'A_dev': self.model.tensors[op.A].device,
                                 'B_dev': self.model.tensors[op.B].device
                             })
-            elif isinstance(op, (PatchEmbed, LayerNorm, Attention, SoftmaxOp, UnaryOp, BinaryOp)):
-                 schedule.append({'op': op, 'type': op.__class__.__name__.lower()})
+            # 所有具体算子直接用类名作为 type
             else:
-                schedule.append({'op': op, 'type': 'unknown'})
+                schedule.append({
+                    'op': op,
+                    'type': op.__class__.__name__.lower()
+                })
+
         return schedule
