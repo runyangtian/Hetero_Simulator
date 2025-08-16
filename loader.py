@@ -7,7 +7,7 @@ from model import Model
 from operations import (
     MatMul, PatchEmbed, LayerNorm,
     SoftmaxOp, GeluOp, ReluOp, SigmoidOp, TanhOp,
-    AddOp, SubOp, MulOp, DivOp, UCIeOp
+    AddOp, SubOp, MulOp, DivOp, UCIeOp, ParallelOp
 )
 
 
@@ -30,7 +30,8 @@ class JSONModelLoader:
         for o in spec.get("ops", []):
             tpe = o.get("type", "").lower()
             if tpe == 'matmul':
-                m.add_op(MatMul(o['A'], o['B'], o['C']))
+                transpose_B = o.get('transpose_B', False)   # 默认 False
+                m.add_op(MatMul(o['A'], o['B'], o['C'], transpose_B=transpose_B))
             elif tpe == 'patchembed':
                 m.add_op(PatchEmbed(o['input_img'], int(o['patch_w']), int(o['patch_h']), o['out'], o['weight_name']))
             elif tpe == 'layernorm':
@@ -42,7 +43,13 @@ class JSONModelLoader:
             elif tpe == 'softmaxop':
                 m.add_op(SoftmaxOp(o['input'], int(o.get('axis', -1)), o['output']))
             elif tpe == 'ucieop':
-                m.add_op(UCIeOp(o['src'], o['dst'], int(o['size_bits'])))
+                m.add_op(UCIeOp(int(o['size_bits'])))
+            elif tpe == 'parallelops':
+                branches = []
+                for branch in o['branches']:
+                    # 递归调用自己，把 branch 解析成 Op
+                    branches.append(self.build({"ops": [branch], "tensors": []}).ops[0])
+                m.add_op(ParallelOp(branches))
             else:
                 raise ValueError(f"Unknown op type in JSON: {o}")
         return m

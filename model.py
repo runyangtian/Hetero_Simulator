@@ -1,4 +1,4 @@
-# 作为所有张量和算子的容器。
+# 所有张量和算子的容器。
 
 from typing import Dict, List, Tuple
 import numpy as np

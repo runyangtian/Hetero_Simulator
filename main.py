@@ -4,7 +4,7 @@ import argparse
 import json
 import time
 
-from hardware_models import MemoryDevice, ComputeUnit#, ACU
+from hardware_models import MemoryDevice, ComputeUnit
 from model import Model
 from loader import JSONModelLoader
 from compiler import SimpleCompiler
@@ -38,11 +38,9 @@ def main():
 
     # Simulate
     sim = Simulator(model, schedule, rram, dram, cu, bits_per_element=16)
-    
-    t0 = time.time()
+
     stats = sim.run()
-    t1 = time.time()
-    
+
     # Print results
     print("\nSimulation result (JSON-driven graph on hetero PIM + ACU):")
     print(f"Total cycles: {stats.cycles}")
@@ -55,11 +53,13 @@ def main():
     print(f"Estimated wall time @1GHz: {exec_time_s:.6f} s")
     print(f"Estimated energy (J): {energy_j:.6f} J")
     
-    print('\nBreakdown (Energy nJ):')
+    print('\nEnergy Breakdown (nJ):')
     for k,v in stats.breakdown.items():
         print(f'  {k}: {v:.2f}')
 
-    print(f"\nSimulation runtime: {t1-t0:.3f}s")
+    print('\nCycle Breakdown:')
+    for k,v in stats.cycles_breakdown.items():
+        print(f'  {k}: {v}')
 
 
 if __name__ == '__main__':

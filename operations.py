@@ -40,18 +40,23 @@ class BinaryOp(Op):
         return [self.A, self.B]
 
 class MatMul(Op):
-    def __init__(self, A: str, B: str, C: str):
+    def __init__(self, A: str, B: str, C: str, transpose_B: bool = False):
         super().__init__(f"MatMul:{A}x{B}->{C}")
         self.A, self.B, self.C = A, B, C
+        self.transpose_B = transpose_B
 
     def flops(self, shapes: Dict[str, TensorShape]) -> int:
         M, K = shapes[self.A].dims
-        K2, N = shapes[self.B].dims
+        if self.transpose_B:
+            N, K2 = shapes[self.B].dims   # 转置情况下 B 是 (N, K)
+        else:
+            K2, N = shapes[self.B].dims
         assert K == K2
         return M * N * K
 
     def required_tensors(self) -> List[str]:
         return [self.A, self.B]
+
 
 class PatchEmbed(Op):
     def __init__(self, input_img: str, patch_w: int, patch_h: int, out_name: str, weight_name: str):
@@ -112,10 +117,24 @@ class DivOp(BinaryOp):
         super().__init__('DIV', A, B, C)
 
 class UCIeOp:
-    def __init__(self, src, dst, size_bits):
-        self.src = src
-        self.dst = dst
+    def __init__(self, size_bits):
         self.size_bits = size_bits
 
     def __repr__(self):
-        return f"UCIeOp(src={self.src}, dst={self.dst}, bits={self.size_bits})"
+        return f"UCIeOp(bits={self.size_bits})"
+
+class ParallelOp(Op):
+    def __init__(self, branches: List[Op]):
+        super().__init__(f"Parallel({','.join(b.name for b in branches)})")
+        self.branches = branches
+
+    def flops(self, shapes: Dict[str, TensorShape]) -> int:
+        # 这里是逻辑 FLOPs 总和（Q,K,V 的 FLOPs 累加）
+        return sum(b.flops(shapes) for b in self.branches)
+
+    def required_tensors(self) -> List[str]:
+        # 所有分支需要的张量集合
+        reqs = []
+        for b in self.branches:
+            reqs.extend(b.required_tensors())
+        return reqs

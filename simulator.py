@@ -4,11 +4,11 @@ import numpy as np
 from typing import List, Dict, Any
 
 from model import Model
-from hardware_models import MemoryDevice, ComputeUnit, ACU, Stats
+from hardware_models import MemoryDevice, ComputeUnit, Stats
 from operations import (
     MatMul, PatchEmbed, LayerNorm,
     SoftmaxOp, GeluOp, ReluOp, SigmoidOp, TanhOp,
-    AddOp, SubOp, MulOp, DivOp, UCIeOp
+    AddOp, SubOp, MulOp, DivOp, UCIeOp, ParallelOp
 )
 
 
@@ -75,8 +75,9 @@ class Simulator:
                 self.stats.macs += macs
                 self.stats.bits_read += (A_tile_bits + B_tile_bits)
                 self.stats.bits_written += C_tile_bits
-                self.stats.breakdown['matmul'] = self.stats.breakdown.get('matmul', 0) + energy
-
+                self.stats.breakdown[ttype] = self.stats.breakdown.get(ttype, 0) + energy
+                self.stats.cycles_breakdown[ttype] = self.stats.cycles_breakdown.get(ttype,0) + cycles
+                
             elif ttype == 'patchembed':
                 op: PatchEmbed = op
                 img_shape = self.model.shapes[op.input_img].dims
@@ -102,7 +103,8 @@ class Simulator:
                 self.stats.macs += macs
                 self.stats.bits_read += (weight_bits + img_bits)
                 self.stats.bits_written += out_bits
-                self.stats.breakdown['patch_embed'] = self.stats.breakdown.get('patch_embed',0) + energy
+                self.stats.breakdown[ttype] = self.stats.breakdown.get(ttype,0) + energy
+                self.stats.cycles_breakdown[ttype] = self.stats.cycles_breakdown.get(ttype,0) + cycles
 
             # 单输入/双输入：这么建模太粗糙，需要修改
 
@@ -121,6 +123,7 @@ class Simulator:
                 self.stats.bits_read += a_bits
                 self.stats.bits_written += c_bits
                 self.stats.breakdown[ttype] = self.stats.breakdown.get(ttype, 0) + energy
+                self.stats.cycles_breakdown[ttype] = self.stats.cycles_breakdown.get(ttype,0) + cycles
 
             elif ttype in ('addop', 'subop', 'mulop', 'divop'):     # 双输入算子
                 macs = op.flops(self.model.shapes)
@@ -139,6 +142,7 @@ class Simulator:
                 self.stats.bits_read += (a_bits + b_bits)
                 self.stats.bits_written += c_bits
                 self.stats.breakdown[ttype] = self.stats.breakdown.get(ttype, 0) + energy
+                self.stats.cycles_breakdown[ttype] = self.stats.cycles_breakdown.get(ttype,0) + cycles
 
             elif ttype == 'ucieop':
                 op = item['op']
@@ -151,7 +155,26 @@ class Simulator:
                 self.stats.cycles += cycles
                 self.stats.energy_nj += energy
                 self.stats.breakdown[ttype] = self.stats.breakdown.get(ttype, 0) + energy
+                self.stats.cycles_breakdown[ttype] = self.stats.cycles_breakdown.get(ttype,0) + cycles
 
+            elif ttype == 'parallel':
+                branch_ops = item['ops']
+                branch_cycles = []
+                branch_energy = []
+                for bop in branch_ops:
+                    c, e, macs, br, bw = self._simulate_single_op(bop)
+                    branch_cycles.append(c)
+                    branch_energy.append(e)
+                    # 这里可以累加 macs、bits 等统计
+                    self.stats.macs += macs
+                    self.stats.bits_read += br
+                    self.stats.bits_written += bw
+                cycles = max(branch_cycles)
+                energy = sum(branch_energy)
+                self.stats.cycles += cycles
+                self.stats.energy_nj += energy
+                self.stats.breakdown['parallel'] = self.stats.breakdown.get('parallel', 0) + energy
+                self.stats.cycles_breakdown['parallel'] = self.stats.cycles_breakdown.get('parallel', 0) + cycles
 
             else:
                 raise ValueError(f"Unknown ttype '{ttype}' in schedule item: {item}")

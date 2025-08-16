@@ -6,7 +6,7 @@ from hardware_models import MemoryDevice, ComputeUnit
 from operations import (
     MatMul, PatchEmbed, LayerNorm,
     SoftmaxOp, GeluOp, ReluOp, SigmoidOp, TanhOp,
-    AddOp, SubOp, MulOp, DivOp, UCIeOp
+    AddOp, SubOp, MulOp, DivOp, UCIeOp, ParallelOp
 )
 
 class SimpleCompiler:
@@ -20,7 +20,8 @@ class SimpleCompiler:
     def place(self) -> Dict[str, str]:
         placements = {}
         for tname, tensor in self.model.tensors.items():
-            if tname.startswith('W') or tensor.device == 'rram':
+            # if tname.startswith('W') or tensor.device == 'rram':
+            if tensor.device == 'rram':
                 if self.rram.allocate(tensor.size_bits):
                     placements[tname] = 'rram'
                     tensor.device = 'rram'
@@ -43,10 +44,13 @@ class SimpleCompiler:
         for op in self.model.ops:
             # MatMul 仍然需要 tiling
             if isinstance(op, MatMul):
-                dims = self.model.shapes[op.A].dims
-                M, K = dims[-2], dims[-1]
-                K2, N = self.model.shapes[op.B].dims
+                M, K = self.model.shapes[op.A].dims
+                if op.transpose_B:
+                    N, K2 = self.model.shapes[op.B].dims
+                else:
+                    K2, N = self.model.shapes[op.B].dims
                 assert K == K2
+
                 for m0 in range(0, M, self.tile_M):
                     msize = min(self.tile_M, M - m0)
                     for n0 in range(0, N, self.tile_N):
@@ -61,6 +65,12 @@ class SimpleCompiler:
                                 'A_dev': self.model.tensors[op.A].device,
                                 'B_dev': self.model.tensors[op.B].device
                             })
+
+
+            elif isinstance(op, ParallelOp):
+                branch_schedules = [self.compile_single(b) for b in op.branches]
+                schedule.append(ParallelSchedule(branch_schedules))
+
             # 所有具体算子直接用类名作为 type
             else:
                 schedule.append({
