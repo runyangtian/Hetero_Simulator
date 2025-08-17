@@ -57,6 +57,10 @@ def main():
     for k,v in stats.breakdown.items():
         print(f'  {k}: {v:.2f}')
 
+    print('\nMAC Breakdown (nJ):')
+    for k,v in stats.macs_breakdown.items():
+        print(f'  {k}: {v}')
+
     print('\nCycle Breakdown:')
     for k,v in stats.cycles_breakdown.items():
         print(f'  {k}: {v}')

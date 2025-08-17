@@ -54,24 +54,6 @@ class ComputeUnit:
     macs_per_cycle: int
     energy_per_mac_nj: float      # energy per MAC in nJ
 
-# # ------------ ACU model (for complex elementwise & nonlinear ops) -------------
-
-# @dataclass
-# class ACU:
-#     throughput_elements_per_cycle: int
-#     energy_per_element_nj: float
-#     call_latency_cycles: int = 1
-#     op_cost_multiplier: Dict[str, float] = field(default_factory=lambda: {
-#         'NEG': 0.2, 'DIV': 2.0, 'EXP': 5.0, 'GELU': 4.0, 'SILU': 3.0,
-#         'SOFTMAX': 6.0, 'LAYERNORM': 6.0,
-#     })
-
-#     def op_cycles_and_energy(self, op_name: str, elements: int) -> Tuple[int, float]:
-#         m = self.op_cost_multiplier.get(op_name.upper(), 1.0)
-#         cycles = math.ceil(elements / self.throughput_elements_per_cycle) + self.call_latency_cycles
-#         energy = elements * self.energy_per_element_nj * m
-#         return cycles, energy
-
 # ----------------------------- Simulator Stats -----------------------------
 
 @dataclass
@@ -82,4 +64,5 @@ class Stats:
     bits_read: int = 0
     bits_written: int = 0
     breakdown: Dict[str, float] = field(default_factory=dict)
+    macs_breakdown: Dict[str, int] = field(default_factory=dict) 
     cycles_breakdown: Dict[str, int] = field(default_factory=dict) 

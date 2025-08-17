@@ -27,16 +27,24 @@
   "ops": [
     {"type": "PatchEmbed", "input_img": "img", "patch_w": 16, "patch_h": 16, "out": "tokens", "weight_name": "W_embed"},
     {"type": "LayerNorm", "A": "tokens", "C": "norm1_out_0"},
+
     {"type": "UCIeOp", "size_bits": 41943040},
-    {"type": "MatMul", "A": "norm1_out_0", "B": "W_q_0", "C": "Q_0"},
-    {"type": "MatMul", "A": "norm1_out_0", "B": "W_k_0", "C": "K_0"},
-    {"type": "MatMul", "A": "norm1_out_0", "B": "W_v_0", "C": "V_0"},
+
+    {
+      "type": "ParallelOps",
+      "branches": [
+        {"type": "MatMul", "A": "norm1_out_0", "B": "W_q_0", "C": "Q_0"},
+        {"type": "MatMul", "A": "norm1_out_0", "B": "W_k_0", "C": "K_0"},
+        {"type": "MatMul", "A": "norm1_out_0", "B": "W_v_0", "C": "V_0"}
+      ]
+    },
+
     {"type": "UCIeOp", "size_bits": 41943040},
+
     {"type": "MatMul", "A": "Q_0", "B": "K_0", "C": "attn_scores_0", "transpose_B": true},
     {"type": "SoftmaxOp", "input": "attn_scores_0", "axis": -1, "output": "attn_probs_0"},
     {"type": "MatMul", "A": "attn_probs_0", "B": "V_0", "C": "attn_out_0"},
     {"type": "AddOp", "A": "attn_out_0", "B": "norm1_out_0", "C": "resid1_0"},
-
     {"type": "LayerNorm", "A": "resid1_0", "C": "norm2_out_0"},
     {"type": "MatMul", "A": "resid1_0", "B": "W1_0", "C": "ff1_0"},
     {"type": "GeluOp", "A": "ff1_0", "C": "ff1_act_0"},
