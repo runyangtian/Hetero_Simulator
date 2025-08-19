@@ -1,55 +1,162 @@
 {
-  "description": "ViT encoder with patch embed + 1 Transformer layer (B=1, 512x512, patch=16, D=2560) using OPTIMIZED attention algorithm",
+  "description": "ViT encoder (B=1, 512x512, patch=16, D=2560, N=1024) — 4 layers, INT4, Plan-A (Attn@DRAM, Linear/FFN@RRAM)",
   "tensors": [
-    {"name": "img", "shape": [3, 512, 512], "bits": 16, "device": "dram"},
-    {"name": "W_embed", "shape": [2560, 2560], "bits": 4, "device": "rram"},
-    {"name": "tokens", "shape": [1024, 2560], "bits": 16, "device": "dram"},
+    {"name": "img",        "shape": [3, 512, 512],   "bits": 4,  "device": "dram"},
+    {"name": "W_embed",    "shape": [768, 2560],     "bits": 4,  "device": "rram"},
+    {"name": "tokens",     "shape": [1024, 2560],    "bits": 4,  "device": "dram"},
+    {"name": "pos_embed",  "shape": [1024, 2560],    "bits": 4,  "device": "dram"},
+
+
     {"name": "W_q_0", "shape": [2560, 2560], "bits": 4, "device": "rram"},
     {"name": "W_k_0", "shape": [2560, 2560], "bits": 4, "device": "rram"},
     {"name": "W_v_0", "shape": [2560, 2560], "bits": 4, "device": "rram"},
-    {"name": "Q_0", "shape": [1024, 2560], "bits": 16, "device": "dram"},
-    {"name": "K_0", "shape": [1024, 2560], "bits": 16, "device": "dram"},
-    {"name": "V_0", "shape": [1024, 2560], "bits": 16, "device": "dram"},
-    {"name": "attn_scores_0", "shape": [1024, 1024], "bits": 16, "device": "dram"},
-    {"name": "attn_probs_0", "shape": [1024, 1024], "bits": 16, "device": "dram"},
-    {"name": "attn_out_0", "shape": [1024, 2560], "bits": 16, "device": "dram"},
-    {"name": "norm1_out_0", "shape": [1024, 2560], "bits": 16, "device": "dram"},
-    {"name": "resid1_0", "shape": [1024, 2560], "bits": 16, "device": "dram"},
-    {"name": "norm2_out_0", "shape": [1, 1024, 2560], "bits": 16, "device": "dram"},
-    {"name": "W1_0", "shape": [2560, 10240], "bits": 4, "device": "rram"},
-    {"name": "W2_0", "shape": [10240, 2560], "bits": 4, "device": "rram"},
-    {"name": "ff1_0", "shape": [1024, 10240], "bits": 16, "device": "dram"},
-    {"name": "ff1_act_0", "shape": [1024, 10240], "bits": 16, "device": "dram"},
-    {"name": "ff2_0", "shape": [1024, 2560], "bits": 16, "device": "dram"},
-    {"name": "resid2_0", "shape": [1, 1024, 2560], "bits": 16, "device": "dram"},
-    {"name": "Q_remote", "shape": [1024, 2560], "bits": 16, "device": "dram"}
+    {"name": "W_o_0", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W1_0",  "shape": [2560, 10240], "bits": 4, "device": "rram"},
+    {"name": "W2_0",  "shape": [2560, 10240], "bits": 4, "device": "rram"},
+
+
+    {"name": "W_q_1", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W_k_1", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W_v_1", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W_o_1", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W1_1",  "shape": [2560, 10240], "bits": 4, "device": "rram"},
+    {"name": "W2_1",  "shape": [2560, 10240], "bits": 4, "device": "rram"},
+
+
+    {"name": "W_q_2", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W_k_2", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W_v_2", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W_o_2", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W1_2",  "shape": [2560, 10240], "bits": 4, "device": "rram"},
+    {"name": "W2_2",  "shape": [2560, 10240], "bits": 4, "device": "rram"},
+
+
+    {"name": "W_q_3", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W_k_3", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W_v_3", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W_o_3", "shape": [2560, 2560], "bits": 4, "device": "rram"},
+    {"name": "W1_3",  "shape": [2560, 10240], "bits": 4, "device": "rram"},
+    {"name": "W2_3",  "shape": [2560, 10240], "bits": 4, "device": "rram"},
+
+
+    {"name": "tokens_pe",    "shape": [1024, 2560], "bits": 4, "device": "dram"},
+    {"name": "norm1_out",    "shape": [1024, 2560], "bits": 4, "device": "dram"},
+    {"name": "Q",            "shape": [1024, 2560], "bits": 4, "device": "dram"},
+    {"name": "K",            "shape": [1024, 2560], "bits": 4, "device": "dram"},
+    {"name": "V",            "shape": [1024, 2560], "bits": 4, "device": "dram"},
+    {"name": "attn_scores",  "shape": [1024, 1024], "bits": 4, "device": "dram"},
+    {"name": "attn_probs",   "shape": [1024, 1024], "bits": 4, "device": "dram"},
+    {"name": "attn_ctx",     "shape": [1024, 2560], "bits": 4, "device": "dram"},
+    {"name": "attn_out",     "shape": [1024, 2560], "bits": 4, "device": "dram"},
+    {"name": "resid1",       "shape": [1024, 2560], "bits": 4, "device": "dram"},
+    {"name": "norm2_out",    "shape": [1024, 2560], "bits": 4, "device": "dram"},
+    {"name": "ff2",          "shape": [1024, 2560], "bits": 4, "device": "dram"},
+    {"name": "encoder_out",  "shape": [1024, 2560], "bits": 4, "device": "dram"}
   ],
+
   "ops": [
+
+    {"type": "UCIeOp", "size_bits": 6291456},
     {"type": "PatchEmbed", "input_img": "img", "patch_w": 16, "patch_h": 16, "out": "tokens", "weight_name": "W_embed"},
-    {"type": "LayerNorm", "A": "tokens", "C": "norm1_out_0"},
+    {"type": "UCIeOp", "size_bits": 10485760},
 
-    {"type": "UCIeOp", "size_bits": 41943040},
 
-    {
-      "type": "ParallelOps",
-      "branches": [
-        {"type": "MatMul", "A": "norm1_out_0", "B": "W_q_0", "C": "Q_0"},
-        {"type": "MatMul", "A": "norm1_out_0", "B": "W_k_0", "C": "K_0"},
-        {"type": "MatMul", "A": "norm1_out_0", "B": "W_v_0", "C": "V_0"}
-      ]
-    },
+    {"type": "AddOp", "A": "tokens", "B": "pos_embed", "C": "tokens_pe"},
 
-    {"type": "UCIeOp", "size_bits": 41943040},
 
-    {"type": "MatMul", "A": "Q_0", "B": "K_0", "C": "attn_scores_0", "transpose_B": true},
-    {"type": "SoftmaxOp", "input": "attn_scores_0", "axis": -1, "output": "attn_probs_0"},
-    {"type": "MatMul", "A": "attn_probs_0", "B": "V_0", "C": "attn_out_0"},
-    {"type": "AddOp", "A": "attn_out_0", "B": "norm1_out_0", "C": "resid1_0"},
-    {"type": "LayerNorm", "A": "resid1_0", "C": "norm2_out_0"},
-    {"type": "MatMul", "A": "resid1_0", "B": "W1_0", "C": "ff1_0"},
-    {"type": "GeluOp", "A": "ff1_0", "C": "ff1_act_0"},
-    {"type": "MatMul", "A": "ff1_act_0", "B": "W2_0", "C": "ff2_0"},
-    {"type": "AddOp", "A": "ff2_0", "B": "resid1_0", "C": "resid2_0"},
-    {"type": "UCIeOp", "size_bits": 41943040}
+    {"type": "LayerNorm", "A": "tokens_pe", "C": "norm1_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "ParallelOps", "branches": [
+      {"type": "MatMul", "A": "norm1_out", "B": "W_q_0", "C": "Q"},
+      {"type": "MatMul", "A": "norm1_out", "B": "W_k_0", "C": "K"},
+      {"type": "MatMul", "A": "norm1_out", "B": "W_v_0", "C": "V"}
+    ]},
+    {"type": "UCIeOp",    "size_bits": 31457280},
+    {"type": "MatMul",    "A": "Q", "B": "K", "C": "attn_scores", "transpose_B": true},
+    {"type": "SoftmaxOp", "input": "attn_scores", "axis": -1, "output": "attn_probs"},
+    {"type": "MatMul",    "A": "attn_probs", "B": "V", "C": "attn_ctx"},
+    {"type": "UCIeOp",    "size_bits": 10485760}, 
+    {"type": "MatMul",    "A": "attn_ctx", "B": "W_o_0", "C": "attn_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760}, 
+    {"type": "AddOp",     "A": "attn_out", "B": "tokens_pe", "C": "resid1"},
+    {"type": "LayerNorm", "A": "resid1", "C": "norm2_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "MatMul",    "A": "norm2_out", "B": "W1_0", "C": "attn_out"}, 
+    {"type": "GeluOp",    "A": "attn_out", "C": "attn_out"},
+    {"type": "MatMul",    "A": "attn_out", "B": "W2_0", "C": "ff2"},
+    {"type": "UCIeOp",    "size_bits": 10485760}, 
+    {"type": "AddOp",     "A": "ff2", "B": "resid1", "C": "tokens_pe"}, 
+
+
+    {"type": "LayerNorm", "A": "tokens_pe", "C": "norm1_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "ParallelOps", "branches": [
+      {"type": "MatMul", "A": "norm1_out", "B": "W_q_1", "C": "Q"},
+      {"type": "MatMul", "A": "norm1_out", "B": "W_k_1", "C": "K"},
+      {"type": "MatMul", "A": "norm1_out", "B": "W_v_1", "C": "V"}
+    ]},
+    {"type": "UCIeOp",    "size_bits": 31457280},
+    {"type": "MatMul",    "A": "Q", "B": "K", "C": "attn_scores", "transpose_B": true},
+    {"type": "SoftmaxOp", "input": "attn_scores", "axis": -1, "output": "attn_probs"},
+    {"type": "MatMul",    "A": "attn_probs", "B": "V", "C": "attn_ctx"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "MatMul",    "A": "attn_ctx", "B": "W_o_1", "C": "attn_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "AddOp",     "A": "attn_out", "B": "tokens_pe", "C": "resid1"},
+    {"type": "LayerNorm", "A": "resid1", "C": "norm2_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "MatMul",    "A": "norm2_out", "B": "W1_1", "C": "attn_out"},
+    {"type": "GeluOp",    "A": "attn_out", "C": "attn_out"},
+    {"type": "MatMul",    "A": "attn_out", "B": "W2_1", "C": "ff2"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "AddOp",     "A": "ff2", "B": "resid1", "C": "tokens_pe"},
+
+
+    {"type": "LayerNorm", "A": "tokens_pe", "C": "norm1_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "ParallelOps", "branches": [
+      {"type": "MatMul", "A": "norm1_out", "B": "W_q_2", "C": "Q"},
+      {"type": "MatMul", "A": "norm1_out", "B": "W_k_2", "C": "K"},
+      {"type": "MatMul", "A": "norm1_out", "B": "W_v_2", "C": "V"}
+    ]},
+    {"type": "UCIeOp",    "size_bits": 31457280},
+    {"type": "MatMul",    "A": "Q", "B": "K", "C": "attn_scores", "transpose_B": true},
+    {"type": "SoftmaxOp", "input": "attn_scores", "axis": -1, "output": "attn_probs"},
+    {"type": "MatMul",    "A": "attn_probs", "B": "V", "C": "attn_ctx"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "MatMul",    "A": "attn_ctx", "B": "W_o_2", "C": "attn_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "AddOp",     "A": "attn_out", "B": "tokens_pe", "C": "resid1"},
+    {"type": "LayerNorm", "A": "resid1", "C": "norm2_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "MatMul",    "A": "norm2_out", "B": "W1_2", "C": "attn_out"},
+    {"type": "GeluOp",    "A": "attn_out", "C": "attn_out"},
+    {"type": "MatMul",    "A": "attn_out", "B": "W2_2", "C": "ff2"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "AddOp",     "A": "ff2", "B": "resid1", "C": "tokens_pe"},
+
+
+    {"type": "LayerNorm", "A": "tokens_pe", "C": "norm1_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "ParallelOps", "branches": [
+      {"type": "MatMul", "A": "norm1_out", "B": "W_q_3", "C": "Q"},
+      {"type": "MatMul", "A": "norm1_out", "B": "W_k_3", "C": "K"},
+      {"type": "MatMul", "A": "norm1_out", "B": "W_v_3", "C": "V"}
+    ]},
+    {"type": "UCIeOp",    "size_bits": 31457280},
+    {"type": "MatMul",    "A": "Q", "B": "K", "C": "attn_scores", "transpose_B": true},
+    {"type": "SoftmaxOp", "input": "attn_scores", "axis": -1, "output": "attn_probs"},
+    {"type": "MatMul",    "A": "attn_probs", "B": "V", "C": "attn_ctx"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "MatMul",    "A": "attn_ctx", "B": "W_o_3", "C": "attn_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "AddOp",     "A": "attn_out", "B": "tokens_pe", "C": "resid1"},
+    {"type": "LayerNorm", "A": "resid1", "C": "norm2_out"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "MatMul",    "A": "norm2_out", "B": "W1_3", "C": "attn_out"},
+    {"type": "GeluOp",    "A": "attn_out", "C": "attn_out"},
+    {"type": "MatMul",    "A": "attn_out", "B": "W2_3", "C": "ff2"},
+    {"type": "UCIeOp",    "size_bits": 10485760},
+    {"type": "AddOp",     "A": "ff2", "B": "resid1", "C": "encoder_out"}
   ]
 }

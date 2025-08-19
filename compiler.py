@@ -12,7 +12,7 @@ from operations import (
 
 class SimpleCompiler:
     def __init__(self, model: Model, rram: MemoryDevice, dram: MemoryDevice, cu: ComputeUnit,
-                 bits_per_element=32, tile_K=256, tile_M=64, tile_N=64):
+                 bits_per_element=8, tile_K=256, tile_M=128, tile_N=128):
         self.model = model
         self.rram, self.dram, self.cu = rram, dram, cu
         self.tile_K, self.tile_M, self.tile_N = tile_K, tile_M, tile_N
@@ -26,6 +26,7 @@ class SimpleCompiler:
                     placements[tname] = 'rram'
                     tensor.device = 'rram'
                 else: # Fallback to DRAM if RRAM is full
+                    print("RRAM is full")
                     placements[tname] = 'dram'
                     tensor.device = 'dram'
             else:
@@ -33,6 +34,7 @@ class SimpleCompiler:
                     placements[tname] = 'dram'
                     tensor.device = 'dram'
                 else: # Fallback to RRAM
+                    print("DRAM is full")
                     placements[tname] = 'rram'
                     tensor.device = 'rram'
         return placements

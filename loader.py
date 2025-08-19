@@ -10,6 +10,22 @@ from operations import (
     AddOp, SubOp, MulOp, DivOp, UCIeOp, ParallelOp
 )
 
+def _assign_layer(t: Dict[str, Any]) -> int:
+    n = t["name"]
+    for pat, ly in [
+        (r'^(W_q|W_k|W_v|W1|W2)_', 1),
+        (r'^(tokens|Q_0|K_0|V_0)$', 2),
+        (r'^attn_out_', 3),
+        (r'^(norm1_out|resid1|ff2)_', 4),
+        (r'^(norm2_out|resid2|ff1(_act)?)_', 5),
+        (r'^attn_(scores|probs)_', 6),
+        (r'^W_embed$', 10),
+        (r'^img$', 12),
+        (r'^Q_remote$', 25),
+    ]:
+        if re.search(pat, n):
+            return ly
+    return 15  # 默认中间层
 
 class JSONModelLoader:
     def __init__(self, default_bits: int = 16):
@@ -23,7 +39,8 @@ class JSONModelLoader:
                 name=t["name"],
                 shape=tuple(int(x) for x in t["shape"]),
                 bits_per_element=int(t.get("bits", self.default_bits)),
-                device=t.get("device", "dram")
+                device=t.get("device")
+                # layer=t.get("layer", _assign_layer(t))
             )
 
         # 添加算子

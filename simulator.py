@@ -13,15 +13,22 @@ from operations import (
 
 
 class Simulator:
-    def __init__(self, model: Model, schedule: List[Dict[str, Any]], rram: MemoryDevice, dram: MemoryDevice, cu: ComputeUnit, bits_per_element=32):
+    def __init__(self, model: Model, schedule: List[Dict[str, Any]], rram: MemoryDevice, dram: MemoryDevice, cu: ComputeUnit, bits_per_element=8):
         self.model = model
         self.schedule = schedule
         self.rram, self.dram = rram, dram
         self.cu = cu
         self.stats = Stats()
         self.bpe_bits = bits_per_element
-        self.ucie_bandwidth = 64  # bits/cycle
+        self.ucie_bandwidth = 4e12  # bits/cycle  # UCIe PHY for Advanced Packages: 4Tbps (16G*64*4) multi-module PHY @ 16Gbps/pin. 64 TX + 64 RX pins per Module (4 modules)
         self.ucie_energy_per_bit = 0.5  # pJ/bit
+    #     self.layer_latency_max_cycles = layer_latency_max_cycles
+        
+    # def _layer_delay_cycles(self, layer: int, max_layer: int = 25) -> int:
+    #     if not (1 <= layer <= max_layer) or self.layer_latency_max_cycles <= 0:
+    #         return 0
+    #     # 四舍五入为整数 cycles
+    #     return int(round((layer - 1) / (max_layer - 1) * self.layer_latency_max_cycles))
 
     def _mem_read_cost(self, dev: MemoryDevice, size_bits: int):
         bw_cycles = math.ceil(size_bits / dev.read_bw_bits_per_cycle) if dev.read_bw_bits_per_cycle > 0 else 0
