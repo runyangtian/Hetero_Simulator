@@ -12,7 +12,7 @@ from simulator import Simulator
 
 def main():
     parser = argparse.ArgumentParser(description='3D Hybrid Memory Simulator (JSON-driven)')
-    parser.add_argument('--json', type=str, default='./model_json/test.json', help='Path to JSON model spec')
+    parser.add_argument('--json', type=str, default='./model_json/patch_embed.json', help='Path to JSON model spec')
     args = parser.parse_args()
 
     # Device parameters
@@ -60,7 +60,7 @@ def main():
     stats = sim.run()
 
     # Print results
-    print("\nSimulation result (JSON-driven graph on hetero PIM + ACU):")
+    print("\nSimulation result (JSON-driven graph on hetero PIM):")
     print(f"Total cycles: {stats.cycles}")
     print(f"Total MACs: {stats.macs}")
     print(f"Total energy (nJ): {stats.energy_nj:.2f}")
@@ -79,7 +79,7 @@ def main():
     for k,v in stats.macs_breakdown.items():
         print(f'  {k}: {v}')
 
-    print('\nCycle Breakdown:')
+    print('\nCycle Breakdown:(现在先别看这个，多头有骚操作，现在还没用)')
     for k,v in stats.cycles_breakdown.items():
         print(f'  {k}: {v}')
 
