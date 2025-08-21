@@ -36,15 +36,15 @@ class MemoryDevice:
     access_latency_cycles: int
     used_bits: int = 0
     # ====== 3D 分層與 TSV 建模 ======
-    num_layers: int = 256
+    num_layers: int = 5
     logic_layer: int = 0
 
     # 帶寬（每個 cycle 可傳送幾多 bit）
-    tsv_bw_bits_per_cycle: int = 1024          # 例：~128 GB/s@1GHz，可按需調
+    tsv_bw_bits_per_cycle: int = 262144          # 例：~128 GB/s@1GHz，可按需調
     # 固定底延遲：不論跨幾多層都有（介面/握手/同步等）
-    tsv_base_latency_cycles: int = 20          # <-- 新增：固定底延遲
+    tsv_base_latency_cycles: int = 3          # <-- 新增：固定底延遲
     # 每 hop 的附加延遲（與 hop 數線性關係）
-    tsv_fixed_latency_per_hop: int = 2
+    tsv_fixed_latency_per_hop: int = 0.8
 
     def tsv_hops(self, src_layer: int, dst_layer: int = None) -> int:
         if src_layer is None or src_layer < 0:
@@ -77,7 +77,7 @@ class MemoryDevice:
 # ----------------------------- Compute unit model -----------------------------
 
 @dataclass
-class ComputeUnit:
+class ComputeUnit: # aka PE
     macs_per_cycle: int
     energy_per_mac_nj: float      # energy per MAC in nJ
 

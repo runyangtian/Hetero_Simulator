@@ -1,0 +1,47 @@
+{
+  "description": "ViT encoder single layer (base x12, largex24, huge x32) (Attn&weights @DRAM, FFN&weights @RRAM)",
+  "tensors": [
+    {"name": "tokens_pe",    "shape": [1024, 2560], "bits": 4, "device": "dram"},
+
+    {"name": "W_q_0", "shape": [2560, 2560], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0", "shape": [2560, 2560], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0", "shape": [2560, 2560], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_o_0", "shape": [2560, 2560], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W1_0",  "shape": [2560, 10240], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W2_0",  "shape": [2560, 10240], "bits": 4, "device": "rram", "layer": 5},
+
+    {"name": "norm1_out",    "shape": [1024, 2560], "bits": 4, "device":  "dram", "layer": 5},
+    {"name": "Q",            "shape": [1024, 2560], "bits": 4, "device":  "dram", "layer": 5},
+    {"name": "K",            "shape": [1024, 2560], "bits": 4, "device":  "dram", "layer": 5},
+    {"name": "V",            "shape": [1024, 2560], "bits": 4, "device":  "dram", "layer": 5},
+    {"name": "attn_scores",  "shape": [1024, 1024], "bits": 4, "device":  "dram", "layer": 5},
+    {"name": "attn_probs",   "shape": [1024, 1024], "bits": 4, "device":  "dram", "layer": 5},
+    {"name": "attn_ctx",     "shape": [1024, 2560], "bits": 4, "device":  "dram", "layer": 5},
+    {"name": "attn_out",     "shape": [1024, 2560], "bits": 4, "device":  "rram", "layer": 5},
+    {"name": "resid1",       "shape": [1024, 2560], "bits": 4, "device":  "dram", "layer": 5},
+    {"name": "norm2_out",    "shape": [1024, 2560], "bits": 4, "device":  "dram", "layer": 5},
+    {"name": "ff2",          "shape": [1024, 2560], "bits": 4, "device":  "rram", "layer": 5}
+  ],
+  "ops": [
+
+    {"type": "LayerNorm", "A": "tokens_pe", "C": "norm1_out"},
+    {"type": "ParallelOps", "branches": [
+      {"type": "MatMul", "A": "norm1_out", "B": "W_q_0", "C": "Q"},
+      {"type": "MatMul", "A": "norm1_out", "B": "W_k_0", "C": "K"},
+      {"type": "MatMul", "A": "norm1_out", "B": "W_v_0", "C": "V"}
+    ]},
+    {"type": "MatMul", "A": "Q", "B": "K", "C": "attn_scores", "transpose_B": true},
+    {"type": "SoftmaxOp", "input": "attn_scores", "axis": -1, "output": "attn_probs"},
+    {"type": "MatMul", "A": "attn_probs", "B": "V", "C": "attn_ctx"},
+    {"type": "MatMul", "A": "attn_ctx", "B": "W_o_0", "C": "attn_out"},
+    {"type": "AddOp", "A": "attn_out", "B": "tokens_pe", "C": "resid1"},
+    {"type": "LayerNorm", "A": "resid1", "C": "norm2_out"},
+    {"type": "UCIeOp", "size_bits": 10485760},
+    {"type": "MatMul", "A": "norm2_out", "B": "W1_0", "C": "attn_out"},
+    {"type": "GeluOp", "A": "attn_out", "C": "attn_out"},
+    {"type": "MatMul", "A": "attn_out", "B": "W2_0", "C": "ff2"},
+    {"type": "UCIeOp", "size_bits": 10485760},
+    {"type": "AddOp", "A": "ff2", "B": "resid1", "C": "tokens_pe"}
+
+  ]
+}
