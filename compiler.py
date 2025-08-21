@@ -11,10 +11,9 @@ from operations import (
 )
 
 class SimpleCompiler:
-    def __init__(self, model: Model, rram: MemoryDevice, dram: MemoryDevice, cu: ComputeUnit,
-                 bits_per_element=8, tile_K=256, tile_M=128, tile_N=128):
+    def __init__(self, model: Model, rram: MemoryDevice, dram: MemoryDevice, bits_per_element=8, tile_K=256, tile_M=128, tile_N=128):
         self.model = model
-        self.rram, self.dram, self.cu = rram, dram, cu
+        self.rram, self.dram = rram, dram
         self.tile_K, self.tile_M, self.tile_N = tile_K, tile_M, tile_N
         self.bpe_bits = bits_per_element
 

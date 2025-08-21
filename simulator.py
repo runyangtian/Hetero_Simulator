@@ -13,11 +13,16 @@ from operations import (
 
 
 class Simulator:
-    def __init__(self, model: Model, schedule: List[Dict[str, Any]], rram: MemoryDevice, dram: MemoryDevice, cu: ComputeUnit, bits_per_element=8):
+    # def __init__(self, model: Model, schedule: List[Dict[str, Any]], rram: MemoryDevice, dram: MemoryDevice, cu: ComputeUnit, bits_per_element=8):
+    def __init__(self, model: Model, schedule: List[Dict[str, Any]], rram: MemoryDevice, dram: MemoryDevice, dram_cu: ComputeUnit, rram_cu: ComputeUnit, bits_per_element=8):
         self.model = model
         self.schedule = schedule
         self.rram, self.dram = rram, dram
-        self.cu = cu
+
+        # self.cu = cu
+        self.dram_cu = dram_cu
+        self.rram_cu = rram_cu
+
         self.stats = Stats()
         self.bpe_bits = bits_per_element
         self.ucie_bandwidth = 4e12  # bits/cycle  # UCIe PHY for Advanced Packages: 4Tbps (16G*64*4) multi-module PHY @ 16Gbps/pin. 64 TX + 64 RX pins per Module (4 modules)
@@ -49,10 +54,31 @@ class Simulator:
 
         return cycles + tsv_cycles, energy
 
-    def _compute_cost(self, macs: int):
-        cycles = math.ceil(macs / self.cu.macs_per_cycle)
-        energy = macs * self.cu.energy_per_mac_nj
+    # def _compute_cost(self, macs: int):
+    #     cycles = math.ceil(macs / self.cu.macs_per_cycle)
+    #     energy = macs * self.cu.energy_per_mac_nj
+    #     return cycles, energy
+    def _compute_cost_engine(self, amount_ops: int, engine: str, cu: ComputeUnit):
+        """
+        amount_ops:
+          - 對 MAC 引擎：就是 MAC 數（通常等於 FLOPs/2 或我們在 flops() 中已定義的 macs）
+          - 對 SFE 引擎：就是元素/操作數（Unary 的 flops() 目前返回元素數）
+        engine: 'mac' | 'sfe'
+        """
+        if amount_ops <= 0:
+            return 0, 0.0
+
+        if engine == 'sfe':
+            tput = max(1, cu.sfe_ops_per_cycle)
+            cycles = (amount_ops + tput - 1) // tput
+            energy = amount_ops * cu.sfe_energy_per_op_nj
+        else:  # 'mac'
+            tput = max(1, cu.macs_per_cycle)
+            cycles = (amount_ops + tput - 1) // tput
+            energy = amount_ops * cu.energy_per_mac_nj
+
         return cycles, energy
+
 
     def _dev_and_layer(self, tname: str):
         """小工具：由张量名取回 (mem_device, layer, size_bits)"""
@@ -74,11 +100,17 @@ class Simulator:
             # === 读 A、B：用各自 device + layer ===
             memA, layerA, _ = self._dev_and_layer(op.A)
             memB, layerB, _ = self._dev_and_layer(op.B)
+            memC, layerC, _ = self._dev_and_layer(op.C)
             cA, eA = self._mem_read_cost(memA, A_tile_bits, src_layer=layerA)
             cB, eB = self._mem_read_cost(memB, B_tile_bits, src_layer=layerB)
+            cC, eC = self._mem_read_cost(memC, C_tile_bits, src_layer=layerC)
 
+            # 選擇哪個 CU：只要 A 或 B 在 RRAM，就走 RRAM 的 MAC；否則走 DRAM 的 MAC
+            # use_rram = (memC is self.rram) or (memB is self.rram)
+            use_rram = (memC is self.rram)
+            cu_sel = self.rram_cu if use_rram else self.dram_cu
             macs = m * n * k
-            cc, ec = self._compute_cost(macs)
+            cc, ec = self._compute_cost_engine(macs, 'mac', cu_sel) 
 
             # === 写 C：用 C 的 device + layer（之前硬写 dram 要改）===
             memC, layerC, _ = self._dev_and_layer(op.C)
@@ -104,8 +136,11 @@ class Simulator:
             memI, layerI, img_bits = self._dev_and_layer(op.input_img)
             cI, eI = self._mem_read_cost(memI, img_bits, src_layer=layerI)
 
+            # PatchEmbed 視作卷積/矩陣乘（MAC 引擎）。通常以權重所在 device 做歸屬
+            use_rram = (memW is self.rram)
+            cu_sel = self.rram_cu if use_rram else self.dram_cu
             macs = num_patches * patch_size * out_dim
-            cc, ec = self._compute_cost(macs)
+            cc, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
 
             out_bits = num_patches * out_dim * self.bpe_bits
             # === 输出张量按自己 device+layer 写回 ===
@@ -119,7 +154,8 @@ class Simulator:
 
         elif ttype in ('softmaxop', 'geluop', 'reluop', 'sigmoidop', 'tanhop', 'layernorm'):
             macs = op.flops(self.model.shapes)
-            cc, ec = self._compute_cost(macs)
+            # cc, ec = self._compute_cost(macs)
+            cc, ec = self._compute_cost_engine(macs, 'sfe', self.dram_cu)
 
             # === A 的读、C 的写都带 device+layer ===
             memA, layerA, a_bits = self._dev_and_layer(op.A)
@@ -133,7 +169,8 @@ class Simulator:
 
         elif ttype in ('addop', 'subop', 'mulop', 'divop'):
             macs = op.flops(self.model.shapes)
-            cc, ec = self._compute_cost(macs)
+            # cc, ec = self._compute_cost(macs)
+            cc, ec = self._compute_cost_engine(macs, 'mac', self.dram_cu)
 
             memA, layerA, a_bits = self._dev_and_layer(op.A)
             memB, layerB, b_bits = self._dev_and_layer(op.B)

@@ -38,8 +38,26 @@ def main():
         access_latency_cycles = 0            
     )
 
-    cu = ComputeUnit(macs_per_cycle=8192, energy_per_mac_nj=0.00015)
-    # acu = ACU(throughput_elements_per_cycle=256, energy_per_element_nj=0.0005, call_latency_cycles=2)
+    # cu = ComputeUnit(macs_per_cycle=8192, energy_per_mac_nj=0.00015)
+
+    # --- DRAM-CU：MAC + SFE ---
+    dram_cu = ComputeUnit(
+        name='DRAM_CU',
+        macs_per_cycle=16384,         # 例：DRAM PE 數量較多 → 吞吐更高
+        energy_per_mac_nj=0.00012,    # 按需調
+        sfe_ops_per_cycle=8192,       # SFE 吞吐（元素/操作 每 cycle）
+        sfe_energy_per_op_nj=0.00005, # SFE 每元素能耗
+        # supported_ops=['matmul', 'conv', 'softmax', 'gelu', 'layernorm', 'add', 'sub', 'mul', 'div']
+    )
+
+    # --- RRAM-CU：只有 MAC（無 SFE）---
+    rram_cu = ComputeUnit(
+        name='RRAM_CU',
+        macs_per_cycle=4096,          # 例：RRAM PE 較少 → 吞吐較低
+        energy_per_mac_nj=0.00008,    # RRAM CIM 能耗參數（示例值）
+        # supported_ops=['matmul']
+    )
+
 
     # Load model
     if args.json:
@@ -51,11 +69,13 @@ def main():
         print("No JSON file provided.")
 
     # Compile
-    compiler = SimpleCompiler(model, rram, dram, cu, bits_per_element=16, tile_K=256, tile_M=128, tile_N=128)
+    # compiler = SimpleCompiler(model, rram, dram, cu, bits_per_element=16, tile_K=256, tile_M=128, tile_N=128)
+    compiler = SimpleCompiler(model, rram, dram, bits_per_element=16, tile_K=256, tile_M=128, tile_N=128)
     schedule = compiler.compile()
 
     # Simulate
-    sim = Simulator(model, schedule, rram, dram, cu, bits_per_element=16)
+    # sim = Simulator(model, schedule, rram, dram, cu, bits_per_element=16)
+    sim = Simulator(model, schedule, rram, dram, dram_cu, rram_cu, bits_per_element=16)
 
     stats = sim.run()
 

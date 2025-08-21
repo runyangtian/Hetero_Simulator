@@ -76,10 +76,30 @@ class MemoryDevice:
 
 # ----------------------------- Compute unit model -----------------------------
 
+# @dataclass
+# class ComputeUnit: # aka PE
+#     macs_per_cycle: int
+#     energy_per_mac_nj: float      # energy per MAC in nJ
+
 @dataclass
-class ComputeUnit: # aka PE
+class ComputeUnit:
+    """
+    一個 logic-die 上的 CU 規格。
+    - 對 DRAM-CU：同時包含 MAC 與 SFE
+    - 對 RRAM-CU：只用 MAC（SFE 參數留 0）
+    """
+    name: str
+
+    # MAC 引擎（matmul/conv/elementwise 等用 MAC 路徑時的吞吐/能耗）
     macs_per_cycle: int
-    energy_per_mac_nj: float      # energy per MAC in nJ
+    energy_per_mac_nj: float
+
+    # SFE 引擎（softmax/gelu/layernorm…）的吞吐/能耗（以「元素/操作」為粒度）
+    sfe_ops_per_cycle: int = 0
+    sfe_energy_per_op_nj: float = 0.0
+
+    # 支援的算子類別（僅標註用途，當前邏輯在 simulator 中選路）
+    # supported_ops: List[str] = field(default_factory=list)
 
 # ----------------------------- Simulator Stats -----------------------------
 
