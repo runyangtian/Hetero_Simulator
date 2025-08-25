@@ -33,7 +33,8 @@ class MemoryDevice:
     write_bw_bits_per_cycle: int
     read_energy_per_bit: float    # nJ per bit read
     write_energy_per_bit: float   # nJ per bit write
-    access_latency_cycles: int
+    read_latency_cycles: int
+    write_latency_cycles: int
     used_bits: int = 0
     # ====== 3D 分層與 TSV 建模 ======
     num_layers: int = 5
@@ -44,7 +45,7 @@ class MemoryDevice:
     # 固定底延遲：不論跨幾多層都有（介面/握手/同步等）
     tsv_base_latency_cycles: int = 3          # <-- 新增：固定底延遲
     # 每 hop 的附加延遲（與 hop 數線性關係）
-    tsv_fixed_latency_per_hop: int = 0.8
+    tsv_fixed_latency_per_hop: int = 1
 
     def tsv_hops(self, src_layer: int, dst_layer: int = None) -> int:
         if src_layer is None or src_layer < 0:

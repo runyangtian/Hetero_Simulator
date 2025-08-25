@@ -35,7 +35,7 @@ class Simulator:
 
     def _mem_read_cost(self, dev: MemoryDevice, size_bits: int, src_layer: int = -1):
         bw_cycles = math.ceil(size_bits / dev.read_bw_bits_per_cycle) if dev.read_bw_bits_per_cycle > 0 else 0
-        cycles = dev.access_latency_cycles + bw_cycles
+        cycles = dev.read_latency_cycles + bw_cycles
         energy = size_bits * dev.read_energy_per_bit
 
         hops = dev.tsv_hops(src_layer)
@@ -44,7 +44,7 @@ class Simulator:
 
     def _mem_write_cost(self, dev: MemoryDevice, size_bits: int, src_layer: int = -1):
         bw_cycles = math.ceil(size_bits / dev.write_bw_bits_per_cycle) if dev.write_bw_bits_per_cycle > 0 else 0
-        cycles = dev.access_latency_cycles + bw_cycles
+        cycles = dev.write_latency_cycles + bw_cycles
         energy = size_bits * dev.write_energy_per_bit
 
         hops = dev.tsv_hops(src_layer)

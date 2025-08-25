@@ -24,7 +24,8 @@ def main():
         write_bw_bits_per_cycle = 1024,    
         read_energy_per_bit  = 0.000429,         # 0.429 pJ/bit
         write_energy_per_bit = 0.000429,         
-        access_latency_cycles = 0             #  后面层延迟建模已经设置起步价了
+        read_latency_cycles = 3,
+        write_latency_cycles = 3             
     )
 
     # --- 3D RRAM (nvCIM style) ---
@@ -32,10 +33,11 @@ def main():
         name='3D_RRAM',
         capacity_bits = int(2*1024*1024*1024*8),        # 2GB
         read_bw_bits_per_cycle  = 768,        # interface BW=12.3 TB/s     12.3 *8 * 1024  =  
-        write_bw_bits_per_cycle = 768,         # 一般写更慢
+        write_bw_bits_per_cycle = 768,        
         read_energy_per_bit  = 0.0004,         # nJ/bit
         write_energy_per_bit = 0.00133,        # nJ/bit
-        access_latency_cycles = 0            
+        read_latency_cycles = 3,
+        write_latency_cycles = 11            
     )
 
     # cu = ComputeUnit(macs_per_cycle=8192, energy_per_mac_nj=0.00015)
