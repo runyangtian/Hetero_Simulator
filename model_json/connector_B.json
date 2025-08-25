@@ -1,12 +1,12 @@
 {
   "description": "Connector (MLP) (connector&weights @RRAM)",
   "tensors": [
-    {"name": "tokens_pe",    "shape": [1024, 2560], "bits": 4, "device": "rram"},
+    {"name": "tokens_pe",    "shape": [1024, 2560], "bits": 16, "device": "rram"},
     {"name": "Wc1",          "shape": [2560, 5120], "bits": 4, "device": "rram"},
     {"name": "Wc2",          "shape": [5120, 2560], "bits": 4, "device": "rram"},
-    {"name": "conn_norm",    "shape": [1024, 2560], "bits": 4, "device": "rram"},
-    {"name": "conn_h",       "shape": [1024, 5120], "bits": 4, "device": "rram"},
-    {"name": "conn_out",     "shape": [1024, 2560], "bits": 4, "device": "rram"}
+    {"name": "conn_norm",    "shape": [1024, 2560], "bits": 16, "device": "rram"},
+    {"name": "conn_h",       "shape": [1024, 5120], "bits": 16, "device": "rram"}, 
+    {"name": "conn_out",     "shape": [1024, 2560], "bits": 16, "device": "rram"}
   ],
 
   "ops": [
@@ -14,6 +14,6 @@
     {"type": "MatMul", "A": "conn_norm", "B": "Wc1", "C": "conn_h"},
     {"type": "GeluOp",  "A": "conn_h", "C": "conn_h"},
     {"type": "MatMul", "A": "conn_h", "B": "Wc2", "C": "conn_out"},
-    {"type": "UCIeOp", "size_bits": 10485760}
+    {"type": "UCIeOp", "size_bits": 41943040}
   ]
 }

@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 from model import Model, Op
 from hardware_models import MemoryDevice, ComputeUnit
 from operations import (
-    MatMul, PatchEmbed, LayerNorm,
+    MatMul, Conv2D, AvgPool2D, LayerNorm,
     SoftmaxOp, GeluOp, ReluOp, SigmoidOp, TanhOp,
     AddOp, SubOp, MulOp, DivOp, UCIeOp, ParallelOp
 )

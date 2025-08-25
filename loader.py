@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 from model import Model
 from operations import (
-    MatMul, PatchEmbed, LayerNorm,
+    MatMul, Conv2D, AvgPool2D, LayerNorm,
     SoftmaxOp, GeluOp, ReluOp, SigmoidOp, TanhOp,
     AddOp, SubOp, MulOp, DivOp, UCIeOp, ParallelOp
 )
@@ -51,6 +51,43 @@ class JSONModelLoader:
                     # 递归调用自己，把 branch 解析成 Op
                     branches.append(self.build({"ops": [branch], "tensors": []}).ops[0])
                 m.add_op(ParallelOp(branches))
+            elif tpe == 'conv2d' or tpe == 'conv':   # 兼容 "Conv2D" / "Conv"
+                # 允许 stride/padding 提供单值或 [h,w]
+                def _pair(v):
+                    if isinstance(v, list) or isinstance(v, tuple):
+                        return int(v[0]), int(v[1])
+                    else:
+                        return int(v), int(v)
+                kh, kw = int(o.get('kernel_h')), int(o.get('kernel_w'))
+                sh, sw = _pair(o.get('stride', 1))
+                ph, pw = _pair(o.get('padding', 0))
+                groups = int(o.get('groups', 1))
+                m.add_op(Conv2D(
+                    input_img=o['input_img'],
+                    weight_name=o['weight_name'],
+                    out_name=o['out'],
+                    kernel_h=kh, kernel_w=kw,
+                    stride_h=sh, stride_w=sw,
+                    padding_h=ph, padding_w=pw,
+                    groups=groups
+                ))
+            elif tpe == 'avgpool2d':
+                def _pair(v):
+                    if isinstance(v, list) or isinstance(v, tuple):
+                        return int(v[0]), int(v[1])
+                    else:
+                        return int(v), int(v)
+                kh, kw = int(o.get('kernel_h')), int(o.get('kernel_w'))
+                sh, sw = _pair(o.get('stride', 1))
+                ph, pw = _pair(o.get('padding', 0))
+
+                m.add_op(AvgPool2D(
+                    input_img=o['input_img'],
+                    out_name=o['out'],
+                    kernel_h=kh, kernel_w=kw,
+                    stride_h=sh, stride_w=sw,
+                    padding_h=ph, padding_w=pw
+                ))
             else:
                 raise ValueError(f"Unknown op type in JSON: {o}")
         return m

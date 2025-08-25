@@ -1,15 +1,15 @@
 {
   "description": "ViT patching+embedding (PatchEmb&weights @RRAM)",
   "tensors": [
-    {"name": "img",        "shape": [3, 512, 512],   "bits": 4, "device": "rram"},
+    {"name": "img",        "shape": [3, 512, 512],   "bits": 16, "device": "dram"},
     {"name": "W_embed",    "shape": [768, 2560],     "bits": 4, "device": "rram"},
-    {"name": "tokens",     "shape": [1024, 2560],    "bits": 4, "device": "rram"},
-    {"name": "pos_embed",  "shape": [1024, 2560],    "bits": 4, "device": "rram"},
-    {"name": "tokens_pe",  "shape": [1024, 2560],    "bits": 4, "device": "rram"}
+    {"name": "tokens",     "shape": [1024, 2560],    "bits": 16, "device": "dram"},
+    {"name": "pos_embed",  "shape": [1024, 2560],    "bits": 16, "device": "dram"},
+    {"name": "tokens_pe",  "shape": [1024, 2560],    "bits": 16, "device": "dram"}
   ],
   "ops": [
     {"type": "PatchEmbed", "input_img": "img", "patch_w": 16, "patch_h": 16, "out": "tokens", "weight_name": "W_embed"},
     {"type": "AddOp", "A": "tokens", "B": "pos_embed", "C": "tokens_pe"},
-    {"type": "UCIeOp", "size_bits": 10485760}
+    {"type": "UCIeOp", "size_bits": 41943040}
   ]
 }

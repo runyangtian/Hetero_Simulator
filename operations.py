@@ -58,22 +58,79 @@ class MatMul(Op):
         return [self.A, self.B]
 
 
-class PatchEmbed(Op):
-    def __init__(self, input_img: str, patch_w: int, patch_h: int, out_name: str, weight_name: str):
-        super().__init__(f"PatchEmbed:{input_img}->{out_name}")
-        self.input_img, self.patch_w, self.patch_h = input_img, patch_w, patch_h
-        self.out_name, self.weight_name = out_name, weight_name
+# class PatchEmbed(Op):
+#     def __init__(self, input_img: str, patch_w: int, patch_h: int, out_name: str, weight_name: str):
+#         super().__init__(f"PatchEmbed:{input_img}->{out_name}")
+#         self.input_img, self.patch_w, self.patch_h = input_img, patch_w, patch_h
+#         self.out_name, self.weight_name = out_name, weight_name
+
+#     def flops(self, shapes: Dict[str, TensorShape]) -> int:
+#         C, H, W = shapes[self.input_img].dims
+#         n_patches_h, n_patches_w = H // self.patch_h, W // self.patch_w
+#         num_patches = n_patches_h * n_patches_w
+#         patch_size = C * self.patch_h * self.patch_w
+#         out_dim = shapes[self.weight_name].dims[1]
+#         return num_patches * patch_size * out_dim
+
+#     def required_tensors(self) -> List[str]:
+#         return [self.input_img, self.weight_name]
+class Conv2D(Op):
+    def __init__(self, input_img: str, weight_name: str, out_name: str,
+                 kernel_h: int, kernel_w: int,
+                 stride_h: int = 1, stride_w: int = 1,
+                 padding_h: int = 0, padding_w: int = 0,
+                 groups: int = 1):
+        super().__init__(f"Conv2D:{input_img}->{out_name}")
+        self.input_img = input_img
+        self.weight_name = weight_name
+        self.out_name = out_name
+        self.kh, self.kw = kernel_h, kernel_w
+        self.sh, self.sw = stride_h, stride_w
+        self.ph, self.pw = padding_h, padding_w
+        self.groups = groups
+
+    def _out_hw(self, H: int, W: int) -> (int, int):
+        Ho = (H + 2*self.ph - self.kh) // self.sh + 1
+        Wo = (W + 2*self.pw - self.kw) // self.sw + 1
+        return Ho, Wo
 
     def flops(self, shapes: Dict[str, TensorShape]) -> int:
-        C, H, W = shapes[self.input_img].dims
-        n_patches_h, n_patches_w = H // self.patch_h, W // self.patch_w
-        num_patches = n_patches_h * n_patches_w
-        patch_size = C * self.patch_h * self.patch_w
-        out_dim = shapes[self.weight_name].dims[1]
-        return num_patches * patch_size * out_dim
+        C_in, H, W = shapes[self.input_img].dims
+        # weight 形状建议: [C_out, C_in/groups, K_h, K_w]
+        C_out = shapes[self.weight_name].dims[0]
+        Cin_per_g = C_in // max(1, self.groups)
+        Ho, Wo = self._out_hw(H, W)
+        macs = C_out * Ho * Wo * Cin_per_g * self.kh * self.kw
+        return macs
 
     def required_tensors(self) -> List[str]:
         return [self.input_img, self.weight_name]
+
+class AvgPool2D(Op):
+    def __init__(self, input_img: str, out_name: str,
+                 kernel_h: int, kernel_w: int,
+                 stride_h: int = 1, stride_w: int = 1,
+                 padding_h: int = 0, padding_w: int = 0):
+        super().__init__(f"AvgPool2D:{input_img}->{out_name}")
+        self.input_img = input_img
+        self.out_name = out_name
+        self.kh, self.kw = kernel_h, kernel_w
+        self.sh, self.sw = stride_h, stride_w
+        self.ph, self.pw = padding_h, padding_w
+
+    def _out_hw(self, H: int, W: int) -> (int, int):
+        Ho = (H + 2*self.ph - self.kh) // self.sh + 1
+        Wo = (W + 2*self.pw - self.kw) // self.sw + 1
+        return Ho, Wo
+
+    def flops(self, shapes: Dict[str, TensorShape]) -> int:
+        C, H, W = shapes[self.input_img].dims
+        Ho, Wo = self._out_hw(H, W)
+        # 近似：每个输出像素做 kh*kw 次累加（除法常数忽略或并入 SFE）
+        return C * Ho * Wo * self.kh * self.kw
+
+    def required_tensors(self) -> List[str]:
+        return [self.input_img]
 
 class SoftmaxOp(UnaryOp):
     def __init__(self, input_tensor: str, axis: int, output_tensor: str):

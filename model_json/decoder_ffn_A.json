@@ -1,0 +1,25 @@
+{"description": "MobileLLama1.4B single layer, 24 layers, 16 heads, 2048 dim, (Attn&FFN @DRAM, weights&KV cache @RRAM)",
+
+"tensors": [
+    {"name": "tokens_pe",    "shape": [2192, 2048], "bits": 16, "device":  "rram", "layer": 5},
+    {"name": "W1_0",         "shape": [2048, 8192], "bits": 4,  "device":  "rram", "layer": 4},
+    {"name": "W2_0",         "shape": [8192, 2048], "bits": 4,  "device":  "rram", "layer": 4},
+    {"name": "attn_ctx_cat", "shape": [2192, 2048], "bits": 16, "device":  "dram", "layer": 2},
+    {"name": "attn_out",     "shape": [2192, 2048], "bits": 16, "device":  "dram", "layer": 2},
+    {"name": "ff1",          "shape": [2192, 8192], "bits": 16, "device":  "dram", "layer": 2},
+    {"name": "resid1",       "shape": [2192, 2048], "bits": 16, "device":  "dram", "layer": 3},
+    {"name": "norm2_out",    "shape": [2192, 2048], "bits": 16, "device":  "dram", "layer": 3},
+    {"name": "ff2",          "shape": [2192, 2048], "bits": 16, "device":  "dram", "layer": 3}
+  ],
+
+  "ops": [  
+    {"type": "UCIeOp", "size_bits": 13369344},  
+    {"type": "AddOp", "A": "attn_out", "B": "tokens_pe", "C": "resid1"},
+    {"type": "LayerNorm", "A": "resid1", "C": "norm2_out"},
+    {"type": "MatMul", "A": "norm2_out", "B": "W1_0", "C": "ff1"},
+    {"type": "GeluOp", "A": "ff1", "C": "ff1"},
+    {"type": "MatMul", "A": "ff1", "B": "W2_0", "C": "ff2"},
+    {"type": "AddOp", "A": "ff2", "B": "resid1", "C": "tokens_pe"}
+
+  ]
+}

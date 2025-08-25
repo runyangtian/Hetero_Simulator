@@ -83,11 +83,6 @@ class MemoryDevice:
 
 @dataclass
 class ComputeUnit:
-    """
-    一個 logic-die 上的 CU 規格。
-    - 對 DRAM-CU：同時包含 MAC 與 SFE
-    - 對 RRAM-CU：只用 MAC（SFE 參數留 0）
-    """
     name: str
 
     # MAC 引擎（matmul/conv/elementwise 等用 MAC 路徑時的吞吐/能耗）

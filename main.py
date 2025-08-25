@@ -19,22 +19,22 @@ def main():
     # --- 3D DRAM (monolithic/hybrid bonded, research level) ---
     dram = MemoryDevice(
         name='3D_DRAM',
-        capacity_bits = 8*1024*1024*1024*8,    # 8 GB
-        read_bw_bits_per_cycle  = 242720,        
-        write_bw_bits_per_cycle = 242720,    
+        capacity_bits = int(6.25*1024*1024*1024*8),    # 6.25GB
+        read_bw_bits_per_cycle  = 1024,        
+        write_bw_bits_per_cycle = 1024,    
         read_energy_per_bit  = 0.000429,         # 0.429 pJ/bit
-        write_energy_per_bit = 0.0005,         # 稍高
+        write_energy_per_bit = 0.000429,         
         access_latency_cycles = 0             #  后面层延迟建模已经设置起步价了
     )
 
     # --- 3D RRAM (nvCIM style) ---
     rram = MemoryDevice(
         name='3D_RRAM',
-        capacity_bits = 8*1024*1024*1024*8,        # 8GB
-        read_bw_bits_per_cycle  = 256,         # ~25 GB/s
-        write_bw_bits_per_cycle = 128,         # 一般写更慢
-        read_energy_per_bit  = 0.00002,        # 20 fJ/bit
-        write_energy_per_bit = 0.00005,        # 50 fJ/bit
+        capacity_bits = int(2*1024*1024*1024*8),        # 2GB
+        read_bw_bits_per_cycle  = 768,        # interface BW=12.3 TB/s     12.3 *8 * 1024  =  
+        write_bw_bits_per_cycle = 768,         # 一般写更慢
+        read_energy_per_bit  = 0.0004,         # nJ/bit
+        write_energy_per_bit = 0.00133,        # nJ/bit
         access_latency_cycles = 0            
     )
 
@@ -43,19 +43,17 @@ def main():
     # --- DRAM-CU：MAC + SFE ---
     dram_cu = ComputeUnit(
         name='DRAM_CU',
-        macs_per_cycle=16384,         # 例：DRAM PE 數量較多 → 吞吐更高
-        energy_per_mac_nj=0.00012,    # 按需調
-        sfe_ops_per_cycle=8192,       # SFE 吞吐（元素/操作 每 cycle）
-        sfe_energy_per_op_nj=0.00005, # SFE 每元素能耗
-        # supported_ops=['matmul', 'conv', 'softmax', 'gelu', 'layernorm', 'add', 'sub', 'mul', 'div']
+        macs_per_cycle=64*16*16,      # 8×8 MAC/PE × 16 PE/PU × 16 PU = 16384 MAC/cycle
+        energy_per_mac_nj=0.000268,   # 由 32 TFLOPS & 4.3 W 反推 ≈ 0.268 pJ/MAC
+        sfe_ops_per_cycle=256*16,      # Special Func. Engine: 256-way SIMD（近似設為每 PU 256 op/cycle × 16 PU）
+        sfe_energy_per_op_nj=0.00005, # SFE 單元素能耗（保守地遠低於 MAC）
     )
 
     # --- RRAM-CU：只有 MAC（無 SFE）---
     rram_cu = ComputeUnit(
         name='RRAM_CU',
-        macs_per_cycle=4096,          # 例：RRAM PE 較少 → 吞吐較低
-        energy_per_mac_nj=0.00008,    # RRAM CIM 能耗參數（示例值）
-        # supported_ops=['matmul']
+        macs_per_cycle=25*16*16,           # 5×5 MAC/PE × 16 PE/PU × 16 PU = 6400 MAC/cycle
+        energy_per_mac_nj=0.000268,    # 由 12.5 TFLOPS & 1.68 W 反推 ~ 0.268 pJ/MAC（與 DRAM 類似量級）
     )
 
 
@@ -83,23 +81,23 @@ def main():
     print("\nSimulation result (JSON-driven graph on hetero PIM):")
     print(f"Total cycles: {stats.cycles}")
     print(f"Total MACs: {stats.macs}")
-    print(f"Total energy (nJ): {stats.energy_nj:.2f}")
+    # print(f"Total energy (nJ): {stats.energy_nj:.2f}")
     
     freq_ghz = 1.0
     exec_time_s = stats.cycles / (freq_ghz * 1e9)
     energy_j = stats.energy_nj * 1e-9
     print(f"Estimated wall time @1GHz: {exec_time_s:.6f} s")
-    print(f"Estimated energy (J): {energy_j:.6f} J")
+    print(f"Total energy (J): {energy_j:.6f} J")
     
     print('\nEnergy Breakdown (nJ):')
     for k,v in stats.breakdown.items():
         print(f'  {k}: {v:.2f}')
 
-    print('\nMAC Breakdown (nJ):')
+    print('\nMAC Breakdown:')
     for k,v in stats.macs_breakdown.items():
         print(f'  {k}: {v}')
 
-    print('\nCycle Breakdown:(现在先别看这个，多头有骚操作，现在还没用)')
+    print('\nCycle Breakdown:')
     for k,v in stats.cycles_breakdown.items():
         print(f'  {k}: {v}')
 

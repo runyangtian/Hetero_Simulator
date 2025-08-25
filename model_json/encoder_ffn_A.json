@@ -1,0 +1,24 @@
+{
+  "description": "ViT encoder single layer (ViT-L 24 layers, 16 heads, 1024 emb_dim) (Attn & FFN @DRAM, weights @RRAM)",
+  
+  "tensors": [
+    {"name": "W1_0",  "shape": [1024, 4096], "bits": 4, "device": "rram", "layer": 4},
+    {"name": "W2_0",  "shape": [4096, 1024], "bits": 4, "device": "rram", "layer": 4},
+    {"name": "tokens_pe",    "shape": [576, 1024], "bits": 16, "device": "dram", "layer": 5},
+    {"name": "attn_out",     "shape": [576, 1024], "bits": 16, "device":  "rram", "layer": 2},
+    {"name": "ff1", "shape": [576, 4096], "bits": 16, "device":  "rram", "layer": 2},
+    {"name": "resid1",       "shape": [576, 1024], "bits": 16, "device":  "rram", "layer": 3},
+    {"name": "norm2_out",    "shape": [576, 1024], "bits": 16, "device":  "rram", "layer": 3},
+    {"name": "ff2",          "shape": [576, 1024], "bits": 16, "device":  "rram", "layer": 3}
+  ],
+
+  "ops": [
+    {"type": "UCIeOp", "size_bits": 33554432},
+    {"type": "AddOp", "A": "attn_out", "B": "tokens_pe", "C": "resid1"},
+    {"type": "LayerNorm", "A": "resid1", "C": "norm2_out"},
+    {"type": "MatMul", "A": "norm2_out", "B": "W1_0", "C": "ff1"},
+    {"type": "GeluOp", "A": "ff1", "C": "ff1"},
+    {"type": "MatMul", "A": "ff1", "B": "W2_0", "C": "ff2"},
+    {"type": "AddOp", "A": "ff2", "B": "resid1", "C": "tokens_pe"}
+  ]
+}
