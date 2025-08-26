@@ -56,6 +56,8 @@ def main():
         name='RRAM_CU',
         macs_per_cycle=25*16*16,           # 5×5 MAC/PE × 16 PE/PU × 16 PU = 6400 MAC/cycle
         energy_per_mac_nj=0.000268,    # 由 12.5 TFLOPS & 1.68 W 反推 ~ 0.268 pJ/MAC（與 DRAM 類似量級）
+        sfe_ops_per_cycle=256*16,      
+        sfe_energy_per_op_nj=0.00005, # 为了仿真给rram也加上SFE
     )
 
 
@@ -82,7 +84,7 @@ def main():
     # Print results
     print("\nSimulation result (JSON-driven graph on hetero PIM):")
     print(f"Total cycles: {stats.cycles}")
-    print(f"Total MACs: {stats.macs}")
+    print(f"Total MACs: {stats.macs}") 
     # print(f"Total energy (nJ): {stats.energy_nj:.2f}")
     
     freq_ghz = 1.0

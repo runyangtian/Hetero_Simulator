@@ -42,7 +42,7 @@ class JSONModelLoader:
             elif tpe == 'addop':
                 m.add_op(AddOp(o['A'], o['B'], o['C']))
             elif tpe == 'softmaxop':
-                m.add_op(SoftmaxOp(o['input'], int(o.get('axis', -1)), o['output']))
+                m.add_op(SoftmaxOp(o['A'], int(o.get('axis', -1)), o['C']))
             elif tpe == 'ucieop':
                 m.add_op(UCIeOp(int(o['size_bits'])))
             elif tpe == 'parallelops':

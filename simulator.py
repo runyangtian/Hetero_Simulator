@@ -57,10 +57,10 @@ class Simulator:
             return 0, 0.0
 
         if engine == 'sfe':
-            tput = max(1, cu.sfe_ops_per_cycle)
+            tput = cu.sfe_ops_per_cycle
             cycles = (amount_ops + tput - 1) // tput
             energy = amount_ops * cu.sfe_energy_per_op_nj
-        else:  # 'mac'
+        else:  # 'mac'``
             tput = max(1, cu.macs_per_cycle)
             cycles = (amount_ops + tput - 1) // tput
             energy = amount_ops * cu.energy_per_mac_nj
@@ -179,12 +179,11 @@ class Simulator:
 
         elif ttype in ('softmaxop', 'geluop', 'reluop', 'sigmoidop', 'tanhop', 'layernorm'):
             macs = op.flops(self.model.shapes)
-            # cc, ec = self._compute_cost(macs)
-            cc, ec = self._compute_cost_engine(macs, 'sfe', self.dram_cu)
-
             # === A 的读、C 的写都带 device+layer ===
             memA, layerA, a_bits = self._dev_and_layer(op.A)
             memC, layerC, c_bits = self._dev_and_layer(op.C)
+            cu_sel = self.rram_cu if (memC is self.rram) else self.dram_cu
+            cc, ec = self._compute_cost_engine(macs, 'sfe', cu_sel)
             rc, re = self._mem_read_cost(memA, a_bits, src_layer=layerA)
             wc, we = self._mem_write_cost(memC, c_bits, src_layer=layerC)
 
@@ -220,46 +219,6 @@ class Simulator:
 
         return cycles, energy, macs, bits_read, bits_written
 
-    # def _simulate_parallel(self, parallel_item: Dict[str, Any]):
-    #     branch_stats = []
-    #     for branch_schedule in parallel_item['branches']:
-    #         b_cycles, b_energy, b_macs, b_br, b_bw = 0, 0, 0, 0, 0
-    #         for item_in_branch in branch_schedule:
-    #             # 若分支里还有 parallel，可递归调用（可选）
-    #             if item_in_branch.get('type') == 'parallel':
-    #                 self._simulate_parallel(item_in_branch)
-    #                 # 递归会直接更新全局统计，这里无需再手动累计
-    #                 continue
-
-    #             c, e, m, br, bw = self._calculate_item_cost(item_in_branch)
-    #             b_cycles += c
-    #             b_energy += e
-    #             b_macs   += m
-    #             b_br     += br
-    #             b_bw     += bw
-
-    #             # —— 将能耗与 MAC 直接记到各自算子类型，避免出现 “parallel” 桶 ——
-    #             t = item_in_branch['type']
-    #             self.stats.breakdown[t]      = self.stats.breakdown.get(t, 0) + e
-    #             self.stats.macs_breakdown[t] = self.stats.macs_breakdown.get(t, 0) + m
-    #             # 注意：cycles_breakdown 不在这里累加，避免与并行关键路径概念冲突
-
-    #         branch_stats.append((b_cycles, b_energy, b_macs, b_br, b_bw))
-
-    #     # 并行：总时间取最长分支；能量/MAC/流量为分支求和
-    #     cycles = max((s[0] for s in branch_stats), default=0)
-    #     print(cycles)
-    #     energy = sum(s[1] for s in branch_stats)
-    #     macs   = sum(s[2] for s in branch_stats)
-    #     bits_read    = sum(s[3] for s in branch_stats)
-    #     bits_written = sum(s[4] for s in branch_stats)
-
-    #     # —— 仅更新全局总量；不再写入 “parallel” 的 breakdown —— 
-    #     self.stats.cycles       += cycles
-    #     self.stats.energy_nj    += energy
-    #     self.stats.macs         += macs
-    #     self.stats.bits_read    += bits_read
-    #     self.stats.bits_written += bits_written
     def _simulate_parallel(self, parallel_item: Dict[str, Any]):
         branch_stats = []  # 每项: (b_cycles, b_energy, b_macs, b_br, b_bw, b_cycles_by_type)
 
@@ -330,27 +289,6 @@ class Simulator:
         # 将关键路径的 cycles_by_type 返回给上层（用于父级并行合并）
         return cycles, energy, macs, bits_read, bits_written, winner_cycles_by_type
 
-
-    # def run(self):
-    #     for item in self.schedule:
-    #         ttype = item['type']
-    #         if ttype == 'parallel':
-    #             self._simulate_parallel(item)
-    #         else:
-    #             # 串行执行单个任务
-    #             cycles, energy, macs, bits_read, bits_written = self._calculate_item_cost(item)
-                
-    #             # 更新全局统计数据
-    #             self.stats.cycles += cycles
-    #             self.stats.energy_nj += energy
-    #             self.stats.macs += macs
-    #             self.stats.bits_read += bits_read
-    #             self.stats.bits_written += bits_written
-    #             self.stats.breakdown[ttype] = self.stats.breakdown.get(ttype, 0) + energy
-    #             self.stats.macs_breakdown[ttype] = self.stats.macs_breakdown.get(ttype, 0) + macs
-    #             self.stats.cycles_breakdown[ttype] = self.stats.cycles_breakdown.get(ttype, 0) + cycles
-        
-    #     return self.stats
     def run(self):
         for item in self.schedule:
             ttype = item['type']
