@@ -1,19 +1,27 @@
 {
-  "description": "Connector (MLP) (connector&weights @RRAM)",
+  "description": "Connector (LDPv2) for MobileLLaMa1.4B, 2048 dim, (connector @RRAM, weights @RRAM)",
+
   "tensors": [
-    {"name": "tokens_pe",    "shape": [1024, 2560], "bits": 16, "device": "rram"},
-    {"name": "Wc1",          "shape": [2560, 5120], "bits": 4, "device": "rram"},
-    {"name": "Wc2",          "shape": [5120, 2560], "bits": 4, "device": "rram"},
-    {"name": "conn_norm",    "shape": [1024, 2560], "bits": 16, "device": "rram"},
-    {"name": "conn_h",       "shape": [1024, 5120], "bits": 16, "device": "rram"}, 
-    {"name": "conn_out",     "shape": [1024, 2560], "bits": 16, "device": "rram"}
+    {"name": "tokens_pe",   "shape": [576, 1024],         "bits": 16, "device": "rram", "layer": 5},
+    {"name": "feat24x24",   "shape": [1024, 24, 24],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "W_pw1",       "shape": [2048, 1024, 1, 1],  "bits": 4,  "device": "rram", "layer": 5},
+    {"name": "W_pw2",       "shape": [2048, 2048, 1, 1],  "bits": 4,  "device": "rram", "layer": 5},
+    {"name": "W_dw",        "shape": [2048, 1, 3, 3],     "bits": 4,  "device": "rram", "layer": 5},
+    {"name": "ldp_pw1",     "shape": [2048, 24, 24],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "ldp_pw2",     "shape": [2048, 24, 24],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "ldp_down",    "shape": [2048, 12, 12],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "ldp_dw",      "shape": [2048, 12, 12],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "ldp_out",     "shape": [2048, 12, 12],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "conn_out",    "shape": [144, 2048],         "bits": 16, "device": "rram", "layer": 5}
   ],
 
   "ops": [
-    {"type": "LayerNorm", "A": "tokens_pe", "C": "conn_norm"},
-    {"type": "MatMul", "A": "conn_norm", "B": "Wc1", "C": "conn_h"},
-    {"type": "GeluOp",  "A": "conn_h", "C": "conn_h"},
-    {"type": "MatMul", "A": "conn_h", "B": "Wc2", "C": "conn_out"},
-    {"type": "UCIeOp", "size_bits": 41943040}
+    {"type": "Conv2D",  "input_img": "feat24x24", "weight_name": "W_pw1", "out": "ldp_pw1", "kernel_h": 1, "kernel_w": 1, "stride": 1, "padding": 0, "groups": 1},
+    {"type": "Conv2D",  "input_img": "ldp_pw1",   "weight_name": "W_pw2", "out": "ldp_pw2", "kernel_h": 1, "kernel_w": 1, "stride": 1, "padding": 0, "groups": 1},
+    {"type": "AvgPool2D", "input_img": "ldp_pw2", "out": "ldp_down", "kernel_h": 2, "kernel_w": 2, "stride": 2, "padding": 0},
+    {"type": "Conv2D",  "input_img": "ldp_down", "weight_name": "W_dw", "out": "ldp_dw", "kernel_h": 3, "kernel_w": 3, "stride": 1, "padding": 1, "groups": 2048},
+    {"type": "AddOp",   "A": "ldp_dw", "B": "ldp_down", "C": "ldp_out"},
+    {"type": "LayerNorm", "A": "conn_out", "C": "conn_out"},
+    {"type": "UCIeOp", "size_bits": 4718592}
   ]
 }

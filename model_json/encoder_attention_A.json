@@ -152,7 +152,7 @@
     {"name": "attn_probs_h5",   "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
     {"name": "attn_probs_h6",   "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
     {"name": "attn_probs_h7",   "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
-    {"name": "attn_probs_h8",   "shape": [576, 576], "bits": 16, "device": "rram", "layer": 2},
+    {"name": "attn_probs_h8",   "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
     {"name": "attn_probs_h9",   "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
     {"name": "attn_probs_h10",  "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
     {"name": "attn_probs_h11",  "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
@@ -180,7 +180,6 @@
     {"name": "attn_ctx_h16",    "shape": [576, 64], "bits": 16, "device": "dram", "layer": 2},
 
     {"name": "attn_ctx_cat",    "shape": [576, 1024], "bits": 16, "device": "dram", "layer": 2},
-
     {"name": "attn_out",     "shape": [576, 1024], "bits": 16, "device":  "dram", "layer": 2}
   ],
 
@@ -308,6 +307,8 @@
       {"type": "MatMul", "A": "attn_probs_h15", "B": "V_h15", "C": "attn_ctx_h15"},
       {"type": "MatMul", "A": "attn_probs_h16", "B": "V_h16", "C": "attn_ctx_h16"}
     ]},
-    {"type": "MatMul", "A": "attn_ctx_cat", "B": "W_o_0", "C": "attn_out"}
+    {"type": "MatMul", "A": "attn_ctx_cat", "B": "W_o_0", "C": "attn_out"},
+    {"type": "AddOp", "A": "attn_out", "B": "tokens_pe", "C": "attn_out"},
+    {"type": "LayerNorm", "A": "attn_out", "C": "attn_out"}
   ]
 }

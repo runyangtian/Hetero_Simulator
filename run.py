@@ -120,22 +120,40 @@ def main():
     ap.add_argument("--freq-ghz", type=float, default=1.0)
     args = ap.parse_args()
 
-    # 固定顺序（环节维度）
+    # # 固定顺序（环节维度）
+    # stages = [
+    #     "patch_embed_A.json",
+    #     "encoder_attention_A.json",
+    #     "encoder_ffn_A.json",
+    #     "connector_A.json",
+    #     "decoder_attention_A.json",
+    #     "decoder_ffn_A.json",
+    # ]
+
+    # # 层数放大（其余默认 1）
+    # multipliers = {
+    #     "encoder_attention_A.json": args.enc_layers,
+    #     "encoder_ffn_A.json": args.enc_layers,
+    #     "decoder_attention_A.json": args.dec_layers,
+    #     "decoder_ffn_A.json": args.dec_layers,
+    # }
+
+        # 固定顺序（环节维度）
     stages = [
-        "patch_embed_A.json",
-        "encoder_attention_A.json",
-        "encoder_ffn_A.json",
-        "connector_A.json",
-        "decoder_attention_A.json",
-        "decoder_ffn_A.json",
+        "patch_embed_B.json",
+        "encoder_attention_B.json",
+        "encoder_ffn_B.json",
+        "connector_B.json",
+        "decoder_attention_B.json",
+        "decoder_ffn_B.json",
     ]
 
     # 层数放大（其余默认 1）
     multipliers = {
-        "encoder_attention_A.json": args.enc_layers,
-        "encoder_ffn_A.json": args.enc_layers,
-        "decoder_attention_A.json": args.dec_layers,
-        "decoder_ffn_A.json": args.dec_layers,
+        "encoder_attention_B.json": args.enc_layers,
+        "encoder_ffn_B.json": args.enc_layers,
+        "decoder_attention_B.json": args.dec_layers,
+        "decoder_ffn_B.json": args.dec_layers,
     }
 
     # —— 跑每个环节，按层数放大，保存“环节级”结果（用于环节占比）
@@ -166,7 +184,7 @@ def main():
 
     # —— 导出：环节层面的统计（含占比）
     import csv
-    with open("stages_summary.csv", "w", newline="") as f:
+    with open("stages_summary_B.csv", "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["stage",
                     "cycles", "cycles_%", 
@@ -189,7 +207,7 @@ def main():
     total_macs   = grand["macs"]
     total_energy = grand["energy_nj"]
 
-    with open("ops_summary.csv", "w", newline="") as f:
+    with open("ops_summary_B.csv", "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["op_type",
                     "cycles", "cycles_%", 
@@ -207,7 +225,7 @@ def main():
 
     # —— 输出总量
     total_time_s = total_cycles / (args.freq_ghz * 1e9)
-    with open("totals.txt", "w") as f:
+    with open("totals_B.txt", "w") as f:
         f.write("==== TOTALS (after layer expansion) ====\n")
         f.write(f"cycles: {total_cycles}\n")
         f.write(f"macs:   {total_macs}\n")

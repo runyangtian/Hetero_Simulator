@@ -4,71 +4,71 @@
   "tensors": [
     {"name": "tokens_pe",    "shape": [576, 1024], "bits": 16, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h1",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h1",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h1",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h1",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h1",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h1",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h2",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h2",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h2",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h2",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h2",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h2",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h3",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h3",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h3",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h3",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h3",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h3",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h4",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h4",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h4",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h4",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h4",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h4",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h5",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h5",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h5",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h5",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h5",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h5",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h6",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h6",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h6",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h6",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h6",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h6",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h7",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h7",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h7",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h7",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h7",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h7",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h8",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h8",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h8",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h8",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h8",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h8",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h9",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h9",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h9",  "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h9",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h9",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h9",  "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h10", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h10", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h10", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h10", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h10", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h10", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h11", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h11", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h11", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h11", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h11", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h11", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h12", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h12", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h12", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h12", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h12", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h12", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h13", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h13", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h13", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h13", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h13", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h13", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h14", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h14", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h14", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h14", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h14", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h14", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h15", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h15", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h15", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h15", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h15", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h15", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_q_0_h16", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_k_0_h16", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
-    {"name": "W_v_0_h16", "shape": [1024, 64], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_q_0_h16", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_k_0_h16", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
+    {"name": "W_v_0_h16", "shape": [1024, 64], "bits": 4, "device": "dram", "layer": 5},
 
-    {"name": "W_o_0", "shape": [1024, 1024], "bits": 4, "device": "rram", "layer": 5},
+    {"name": "W_o_0", "shape": [1024, 1024], "bits": 4, "device": "dram", "layer": 5},
 
 
     {"name": "norm1_out",    "shape": [576, 1024], "bits": 16, "device":  "dram", "layer": 5},
@@ -152,7 +152,7 @@
     {"name": "attn_probs_h5",   "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
     {"name": "attn_probs_h6",   "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
     {"name": "attn_probs_h7",   "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
-    {"name": "attn_probs_h8",   "shape": [576, 576], "bits": 16, "device": "rram", "layer": 2},
+    {"name": "attn_probs_h8",   "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
     {"name": "attn_probs_h9",   "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
     {"name": "attn_probs_h10",  "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
     {"name": "attn_probs_h11",  "shape": [576, 576], "bits": 16, "device": "dram", "layer": 2},
@@ -180,13 +180,11 @@
     {"name": "attn_ctx_h16",    "shape": [576, 64], "bits": 16, "device": "dram", "layer": 2},
 
     {"name": "attn_ctx_cat",    "shape": [576, 1024], "bits": 16, "device": "dram", "layer": 2},
-
     {"name": "attn_out",     "shape": [576, 1024], "bits": 16, "device":  "dram", "layer": 2}
   ],
 
   "ops": [
     {"type": "LayerNorm", "A": "tokens_pe", "C": "norm1_out"},
-    {"type": "UCIeOp", "size_bits": 16777216},
 
     {"type": "ParallelOps", "branches": [
       {"type": "MatMul", "A": "norm1_out", "B": "W_q_0_h1",  "C": "Q_h1"},
@@ -308,6 +306,9 @@
       {"type": "MatMul", "A": "attn_probs_h15", "B": "V_h15", "C": "attn_ctx_h15"},
       {"type": "MatMul", "A": "attn_probs_h16", "B": "V_h16", "C": "attn_ctx_h16"}
     ]},
-    {"type": "MatMul", "A": "attn_ctx_cat", "B": "W_o_0", "C": "attn_out"}
+    {"type": "MatMul", "A": "attn_ctx_cat", "B": "W_o_0", "C": "attn_out"},
+    {"type": "AddOp", "A": "attn_out", "B": "tokens_pe", "C": "attn_out"},
+    {"type": "LayerNorm", "A": "attn_out", "C": "attn_out"},
+    {"type": "UCIeOp", "size_bits": 9437184}
   ]
 }
