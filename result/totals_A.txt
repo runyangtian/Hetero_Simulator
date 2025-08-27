@@ -1,0 +1,5 @@
+==== TOTALS (after layer expansion) ====
+cycles: 292917430
+macs:   1740401147904
+energy: 744699555.114942 nJ  (0.744699555 J)
+time@1.0GHz: 0.292917 s

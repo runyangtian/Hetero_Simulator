@@ -12,6 +12,14 @@ from loader import JSONModelLoader
 from compiler import SimpleCompiler
 from simulator import Simulator
 
+# stage_output_path = "./result/stages_summary_B.csv"
+# ops_output_path = "./result/ops_summary_B.csv"
+# total_output_path = "./result/totals_B.txt"
+
+stage_output_path = "./result/stages_summary_A.csv"
+ops_output_path = "./result/ops_summary_A.csv"
+total_output_path = "./result/totals_A.txt"
+
 # —— 设备 & CU：保持与 main.py 一致 ——
 def make_devices_and_cus():
     dram = MemoryDevice(
@@ -28,8 +36,8 @@ def make_devices_and_cus():
     rram = MemoryDevice(
         name='3D_RRAM',
         capacity_bits = int(2*1024*1024*1024*8),        # 2GB
-        read_bw_bits_per_cycle  = 768,
-        write_bw_bits_per_cycle = 768,
+        read_bw_bits_per_cycle  = 4096,
+        write_bw_bits_per_cycle = 4096,
         read_energy_per_bit  = 0.0004,          # nJ/bit
         write_energy_per_bit = 0.00133,         # nJ/bit
         read_latency_cycles = 3,
@@ -120,41 +128,41 @@ def main():
     ap.add_argument("--freq-ghz", type=float, default=1.0)
     args = ap.parse_args()
 
-    # # 固定顺序（环节维度）
-    # stages = [
-    #     "patch_embed_A.json",
-    #     "encoder_attention_A.json",
-    #     "encoder_ffn_A.json",
-    #     "connector_A.json",
-    #     "decoder_attention_A.json",
-    #     "decoder_ffn_A.json",
-    # ]
-
-    # # 层数放大（其余默认 1）
-    # multipliers = {
-    #     "encoder_attention_A.json": args.enc_layers,
-    #     "encoder_ffn_A.json": args.enc_layers,
-    #     "decoder_attention_A.json": args.dec_layers,
-    #     "decoder_ffn_A.json": args.dec_layers,
-    # }
-
-        # 固定顺序（环节维度）
+    # 固定顺序（环节维度）
     stages = [
-        "patch_embed_B.json",
-        "encoder_attention_B.json",
-        "encoder_ffn_B.json",
-        "connector_B.json",
-        "decoder_attention_B.json",
-        "decoder_ffn_B.json",
+        "patch_embed_A.json",
+        "encoder_attention_A.json",
+        "encoder_ffn_A.json",
+        "connector_A.json",
+        "decoder_attention_A.json",
+        "decoder_ffn_A.json",
     ]
 
     # 层数放大（其余默认 1）
     multipliers = {
-        "encoder_attention_B.json": args.enc_layers,
-        "encoder_ffn_B.json": args.enc_layers,
-        "decoder_attention_B.json": args.dec_layers,
-        "decoder_ffn_B.json": args.dec_layers,
+        "encoder_attention_A.json": args.enc_layers,
+        "encoder_ffn_A.json": args.enc_layers,
+        "decoder_attention_A.json": args.dec_layers,
+        "decoder_ffn_A.json": args.dec_layers,
     }
+
+    #     # 固定顺序（环节维度）
+    # stages = [
+    #     "patch_embed_B.json",
+    #     "encoder_attention_B.json",
+    #     "encoder_ffn_B.json",
+    #     "connector_B.json",
+    #     "decoder_attention_B.json",
+    #     "decoder_ffn_B.json",
+    # ]
+
+    # # 层数放大（其余默认 1）
+    # multipliers = {
+    #     "encoder_attention_B.json": args.enc_layers,
+    #     "encoder_ffn_B.json": args.enc_layers,
+    #     "decoder_attention_B.json": args.dec_layers,
+    #     "decoder_ffn_B.json": args.dec_layers,
+    # }
 
     # —— 跑每个环节，按层数放大，保存“环节级”结果（用于环节占比）
     stage_results = {}
@@ -184,7 +192,7 @@ def main():
 
     # —— 导出：环节层面的统计（含占比）
     import csv
-    with open("stages_summary_B.csv", "w", newline="") as f:
+    with open(stage_output_path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["stage",
                     "cycles", "cycles_%", 
@@ -207,7 +215,7 @@ def main():
     total_macs   = grand["macs"]
     total_energy = grand["energy_nj"]
 
-    with open("ops_summary_B.csv", "w", newline="") as f:
+    with open(ops_output_path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["op_type",
                     "cycles", "cycles_%", 
@@ -225,24 +233,14 @@ def main():
 
     # —— 输出总量
     total_time_s = total_cycles / (args.freq_ghz * 1e9)
-    with open("totals_B.txt", "w") as f:
+    with open(total_output_path, "w") as f:
         f.write("==== TOTALS (after layer expansion) ====\n")
         f.write(f"cycles: {total_cycles}\n")
         f.write(f"macs:   {total_macs}\n")
         f.write(f"energy: {total_energy:.6f} nJ  ({total_energy*1e-9:.9f} J)\n")
         f.write(f"time@{args.freq_ghz}GHz: {total_time_s:.6f} s\n")
 
-    # —— 终端简报
-    print("✔ 已完成批跑与统计：")
-    print(f"- stages_summary.csv （环节统计+占比）")
-    print(f"- ops_summary.csv    （算子统计+占比）")
-    print(f"- totals.txt         （总量）")
-    print("")
-    print("总量（after expansion）")
-    print(f"  cycles: {total_cycles}")
-    print(f"  macs:   {total_macs}")
-    print(f"  energy: {total_energy*1e-9:.6f} J")
-    print(f"  time  : {total_time_s:.6f} s @ {args.freq_ghz} GHz")
+    print("跑完了, 去 result/ 看")
 
 if __name__ == "__main__":
     main()

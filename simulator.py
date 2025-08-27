@@ -26,12 +26,22 @@ class Simulator:
         self.ucie_bandwidth = 2048      # 32 Gb/s × 64 = 2,048 Gb/s；1 GHz → 2,048 Gb/s ÷ 1e9 = 2,048 bit/cycle，全双工则*2
         self.ucie_energy_per_bit = 0.5  # pJ/bit
         self.layer_latency_max_cycles = 3 # 0.01ns/layer, 256 layer in total
-        
-    def _layer_delay_cycles(self, layer: int, max_layer: int = 256) -> int:
-        if not (1 <= layer <= max_layer) or self.layer_latency_max_cycles <= 0:
-            return 0
-        # 四舍五入为整数 cycles
-        return int(round((layer - 1) / (max_layer - 1) * self.layer_latency_max_cycles))
+
+    def _tile_wave_overhead(self, cu, m: int, n: int) -> int:
+        """
+        近似：二维 systolic 一条波的填/排空 = (m_eff-1) + (n_eff-1)
+        - DRAM_CU 当作 8x8
+        - RRAM_CU 当作 4x4
+        """
+        # 基于 CU 粗略设定阵列 tile 尺寸
+        if getattr(cu, 'name', '') == 'RRAM_CU':
+            mt, nt = 4, 4
+        else:
+            mt, nt = 8, 8
+        m_eff = max(1, min(m, mt))
+        n_eff = max(1, min(n, nt))
+        return (m_eff - 1) + (n_eff - 1)
+
 
     def _mem_read_cost(self, dev: MemoryDevice, size_bits: int, src_layer: int = -1):
         bw_cycles = math.ceil(size_bits / dev.read_bw_bits_per_cycle) if dev.read_bw_bits_per_cycle > 0 else 0
@@ -80,31 +90,44 @@ class Simulator:
 
         if ttype == 'matmul_tile':
             m, n, k = item['msize'], item['nsize'], item['ksize']
-            A_tile_bits = m * k * self.bpe_bits
-            B_tile_bits = k * n * self.bpe_bits
-            C_tile_bits = m * n * self.bpe_bits
+            bpe = self.bpe_bits  # 若 A/B/C 位宽不同，可改为由张量元数据读取
+            A_tile_bits = m * k * bpe
+            B_tile_bits = k * n * bpe
+            C_tile_bits = m * n * bpe
 
-            # === 读 A、B：用各自 device + layer ===
+            # --- 设备与层 ---
             memA, layerA, _ = self._dev_and_layer(op.A)
             memB, layerB, _ = self._dev_and_layer(op.B)
             memC, layerC, _ = self._dev_and_layer(op.C)
+
+            # --- 读 A/B（与你原先一致）---
             cA, eA = self._mem_read_cost(memA, A_tile_bits, src_layer=layerA)
             cB, eB = self._mem_read_cost(memB, B_tile_bits, src_layer=layerB)
-            cC, eC = self._mem_read_cost(memC, C_tile_bits, src_layer=layerC)
+            c_in = cA + cB   # 如果更保守可用 max(cA, cB)
 
-            # 選擇哪個 CU：只要 A 或 B 在 RRAM，就走 RRAM 的 MAC；否則走 DRAM 的 MAC
-            # use_rram = (memC is self.rram) or (memB is self.rram)
+            # --- 选择 CU：按 C 的 device（你之前的逻辑）---
             use_rram = (memC is self.rram)
             cu_sel = self.rram_cu if use_rram else self.dram_cu
-            macs = m * n * k
-            cc, ec = self._compute_cost_engine(macs, 'mac', cu_sel) 
 
-            # === 写 C：用 C 的 device + layer（之前硬写 dram 要改）===
-            memC, layerC, _ = self._dev_and_layer(op.C)
+            # --- 计算吞吐（近似）---
+            macs = m * n * k
+            # 用你的引擎计算能量，但忽略它返回的周期（我们自己算周期）
+            _, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
+
+            # systolic 的“一条波”填/排空开销（近似）
+            wave_ovhd = self._tile_wave_overhead(cu_sel, m, n)
+
+            # 计算周期 ≈ 吞吐周期 + 一条波的填/排空
+            cc_tput = (macs + cu_sel.macs_per_cycle - 1) // cu_sel.macs_per_cycle
+            cc = cc_tput + wave_ovhd
+
+            # --- 写回 C ---
             cW, eW = self._mem_write_cost(memC, C_tile_bits, src_layer=layerC)
 
-            cycles = max(cA + cB, cc) + cW
+            # --- 汇总：读与算重叠，最后再写 ---
+            cycles = max(c_in, cc) + cW
             energy = eA + eB + ec + eW
+
             bits_read = A_tile_bits + B_tile_bits
             bits_written = C_tile_bits
 
