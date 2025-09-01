@@ -20,42 +20,37 @@ def main():
     dram = MemoryDevice(
         name='3D_DRAM',
         capacity_bits = int(6.25*1024*1024*1024*8),    # 6.25GB
-        read_bw_bits_per_cycle  = 1024,        
-        write_bw_bits_per_cycle = 1024,    
-        read_energy_per_bit  = 0.000429,         # 0.429 pJ/bit
-        write_energy_per_bit = 0.000429,         
+        read_bw_bits_per_cycle  = 1024,
+        write_bw_bits_per_cycle = 1024,
+        read_energy_per_bit  = 0.000429,
+        write_energy_per_bit = 0.000429,
         read_latency_cycles = 3,
-        write_latency_cycles = 3             
+        write_latency_cycles = 3
     )
 
-    # --- 3D RRAM (nvCIM style) ---
     rram = MemoryDevice(
         name='3D_RRAM',
         capacity_bits = int(2*1024*1024*1024*8),        # 2GB
-        read_bw_bits_per_cycle  = 768,        # interface BW=12.3 TB/s     12.3 *8 * 1024  =  
-        write_bw_bits_per_cycle = 768,        
-        read_energy_per_bit  = 0.0004,         # nJ/bit
-        write_energy_per_bit = 0.00133,        # nJ/bit
+        read_bw_bits_per_cycle  = 4096,
+        write_bw_bits_per_cycle = 4096,
+        read_energy_per_bit  = 0.0004,          # nJ/bit
+        write_energy_per_bit = 0.00133,         # nJ/bit
         read_latency_cycles = 3,
-        write_latency_cycles = 11            
+        write_latency_cycles = 11
     )
 
-    # cu = ComputeUnit(macs_per_cycle=8192, energy_per_mac_nj=0.00015)
-
-    # --- DRAM-CU：MAC + SFE ---
     dram_cu = ComputeUnit(
         name='DRAM_CU',
-        macs_per_cycle=64*16*16,      # 8×8 MAC/PE × 16 PE/PU × 16 PU = 16384 MAC/cycle
-        energy_per_mac_nj=0.000268,   # 由 32 TFLOPS & 4.3 W 反推 ≈ 0.268 pJ/MAC
-        sfe_ops_per_cycle=256*16,      # Special Func. Engine: 256-way SIMD（近似設為每 PU 256 op/cycle × 16 PU）
-        sfe_energy_per_op_nj=0.00005, # SFE 單元素能耗（保守地遠低於 MAC）
+        macs_per_cycle=1024,
+        energy_per_mac_nj=0.000604,
+        sfe_ops_per_cycle=256*16,
+        sfe_energy_per_op_nj=0.00005,
     )
 
-    # --- RRAM-CU：只有 MAC（無 SFE）---
     rram_cu = ComputeUnit(
         name='RRAM_CU',
-        macs_per_cycle=25*16*16,           # 5×5 MAC/PE × 16 PE/PU × 16 PU = 6400 MAC/cycle
-        energy_per_mac_nj=0.000268,    # 由 12.5 TFLOPS & 1.68 W 反推 ~ 0.268 pJ/MAC（與 DRAM 類似量級）
+        macs_per_cycle=16384,                             #16384,
+        energy_per_mac_nj=0.000604,
         sfe_ops_per_cycle=256*16,      
         sfe_energy_per_op_nj=0.00005, # 为了仿真给rram也加上SFE
     )

@@ -27,20 +27,20 @@ class Simulator:
         self.ucie_energy_per_bit = 0.5  # pJ/bit
         self.layer_latency_max_cycles = 3 # 0.01ns/layer, 256 layer in total
 
-    def _tile_wave_overhead(self, cu, m: int, n: int) -> int:
-        """
-        近似：二维 systolic 一条波的填/排空 = (m_eff-1) + (n_eff-1)
-        - DRAM_CU 当作 8x8
-        - RRAM_CU 当作 4x4
-        """
-        # 基于 CU 粗略设定阵列 tile 尺寸
-        if getattr(cu, 'name', '') == 'RRAM_CU':
-            mt, nt = 4, 4
-        else:
-            mt, nt = 8, 8
-        m_eff = max(1, min(m, mt))
-        n_eff = max(1, min(n, nt))
-        return (m_eff - 1) + (n_eff - 1)
+    # def _tile_wave_overhead(self, cu, m: int, n: int) -> int:
+    #     """
+    #     近似：二维 systolic 一条波的填/排空 = (m_eff-1) + (n_eff-1)
+    #     - DRAM_CU 当作 8x8
+    #     - RRAM_CU 当作 4x4
+    #     """
+    #     # 基于 CU 粗略设定阵列 tile 尺寸
+    #     if getattr(cu, 'name', '') == 'RRAM_CU':
+    #         mt, nt = 4, 4
+    #     else:
+    #         mt, nt = 2, 2
+    #     m_eff = max(1, min(m, mt))
+    #     n_eff = max(1, min(n, nt))
+    #     return (m_eff - 1) + (n_eff - 1)
 
 
     def _mem_read_cost(self, dev: MemoryDevice, size_bits: int, src_layer: int = -1):
@@ -103,7 +103,7 @@ class Simulator:
             # --- 读 A/B（与你原先一致）---
             cA, eA = self._mem_read_cost(memA, A_tile_bits, src_layer=layerA)
             cB, eB = self._mem_read_cost(memB, B_tile_bits, src_layer=layerB)
-            c_in = cA + cB   # 如果更保守可用 max(cA, cB)
+            c_in = max(cA, cB)
 
             # --- 选择 CU：按 C 的 device（你之前的逻辑）---
             use_rram = (memC is self.rram)
@@ -115,17 +115,18 @@ class Simulator:
             _, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
 
             # systolic 的“一条波”填/排空开销（近似）
-            wave_ovhd = self._tile_wave_overhead(cu_sel, m, n)
+            # wave_ovhd = self._tile_wave_overhead(cu_sel, m, n)
 
             # 计算周期 ≈ 吞吐周期 + 一条波的填/排空
             cc_tput = (macs + cu_sel.macs_per_cycle - 1) // cu_sel.macs_per_cycle
-            cc = cc_tput + wave_ovhd
+            cc = cc_tput #+ wave_ovhd
 
             # --- 写回 C ---
             cW, eW = self._mem_write_cost(memC, C_tile_bits, src_layer=layerC)
 
             # --- 汇总：读与算重叠，最后再写 ---
-            cycles = max(c_in, cc) + cW
+            # cycles = c_in + cc + cW
+            cycles = max(c_in, cc, cW)
             energy = eA + eB + ec + eW
 
             bits_read = A_tile_bits + B_tile_bits
@@ -134,7 +135,7 @@ class Simulator:
         elif ttype == 'conv2d':
             op: Conv2D = op
             C_in, H, W = self.model.shapes[op.input_img].dims
-            wshape = self.model.shapes[op.weight_name].dims  # 可能是 [Cpatch, Cout] 或 [Cout, Cin/groups, Kh, Kw]
+            wshape = self.model.shapes[op.weight_name].dims  # [Cpatch, Cout] 或 [Cout, Cin/groups, Kh, Kw]
 
             # === 读权重 ===
             memW, layerW, weight_bits = self._dev_and_layer(op.weight_name)
@@ -148,28 +149,43 @@ class Simulator:
             Ho = (H + 2*op.ph - op.kh) // op.sh + 1
             Wo = (W + 2*op.pw - op.kw) // op.sw + 1
 
-            # === 计算 MAC / 输出位数（兼容两种权重）
+            # === GEMM 等价尺寸 + MACs / out_bits ===
             if len(wshape) == 2:
-                # Patch-Embed 模式：权重 [Cpatch, Cout]，例如 [588, 1024]
+                # Patch-Embed: [Cpatch, Cout]
                 Cpatch, Cout = wshape[0], wshape[1]
-                macs = Ho * Wo * Cpatch * Cout
-                out_bits = Ho * Wo * Cout * self.bpe_bits
+                m = Ho * Wo
+                k = Cpatch
+                n = Cout
+                macs = m * k * n
+                out_bits = m * n * self.bpe_bits
             else:
-                # 通用卷积模式：权重 [Cout, Cin/groups, Kh, Kw]
+                # 通用卷积: [Cout, Cin/groups, Kh, Kw]
                 Cout = wshape[0]
                 Cin_per_g = C_in // max(1, op.groups)
-                macs = Cout * Ho * Wo * Cin_per_g * op.kh * op.kw
-                out_bits = Cout * Ho * Wo * self.bpe_bits
+                m = Ho * Wo
+                k = Cin_per_g * op.kh * op.kw
+                n = Cout
+                macs = m * k * n
+                out_bits = m * n * self.bpe_bits
 
-            # === 选择 CU：按输出张量所在 device ===
+            # === 选择 CU：按输出张量所在 device（与你原逻辑保持一致）===
             memO, layerO, _ = self._dev_and_layer(op.out_name)
             cu_sel = self.rram_cu if (memO is self.rram) else self.dram_cu
-            cc, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
+
+            # 吞吐周期（近似）+ 一条波填/排空
+            cc_tput = (macs + cu_sel.macs_per_cycle - 1) // cu_sel.macs_per_cycle
+            # wave_ovhd = self._tile_wave_overhead(cu_sel, m, n)
+            cc = cc_tput #+ wave_ovhd
+
+            # 计算能量（保持你原接口；周期我们用上面的 cc）
+            _, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
 
             # === 写回输出 ===
             cOut, eOut = self._mem_write_cost(memO, out_bits, src_layer=layerO)
 
-            cycles = max(cWrd + cI, cc) + cOut
+            # === 汇总（读与算重叠，最后写）===
+            cycles = max(max(cWrd, cI), cc, cOut)
+            # cycles = max(cWrd, cI) + cc + cOut
             energy = eWrd + eI + ec + eOut
             bits_read = weight_bits + img_bits
             bits_written = out_bits
@@ -195,8 +211,7 @@ class Simulator:
             # 写回
             out_bits = Cc * Ho * Wo * self.bpe_bits
             cOut, eOut = self._mem_write_cost(memO, out_bits, src_layer=layerO)
-
-            cycles = max(cI, cc) + cOut
+            cycles = cI + cc + cOut
             energy = eI + ec + eOut
             bits_read, bits_written = img_bits, out_bits
 

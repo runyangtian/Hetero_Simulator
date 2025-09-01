@@ -12,13 +12,13 @@ from loader import JSONModelLoader
 from compiler import SimpleCompiler
 from simulator import Simulator
 
-# stage_output_path = "./result/stages_summary_B.csv"
-# ops_output_path = "./result/ops_summary_B.csv"
-# total_output_path = "./result/totals_B.txt"
+stage_output_path = "./result/stages_summary_B.csv"
+ops_output_path = "./result/ops_summary_B.csv"
+total_output_path = "./result/totals_B.txt"
 
-stage_output_path = "./result/stages_summary_A.csv"
-ops_output_path = "./result/ops_summary_A.csv"
-total_output_path = "./result/totals_A.txt"
+# stage_output_path = "./result/stages_summary_A.csv"
+# ops_output_path = "./result/ops_summary_A.csv"
+# total_output_path = "./result/totals_A.txt"
 
 # —— 设备 & CU：保持与 main.py 一致 ——
 def make_devices_and_cus():
@@ -46,16 +46,16 @@ def make_devices_and_cus():
 
     dram_cu = ComputeUnit(
         name='DRAM_CU',
-        macs_per_cycle=64*16*16,        # 16384 MAC/cycle
-        energy_per_mac_nj=0.000268,
+        macs_per_cycle=1024,            # 32 * 32
+        energy_per_mac_nj=0.000604,
         sfe_ops_per_cycle=256*16,
         sfe_energy_per_op_nj=0.00005,
     )
 
     rram_cu = ComputeUnit(
         name='RRAM_CU',
-        macs_per_cycle=25*16*16,        # 6400 MAC/cycle
-        energy_per_mac_nj=0.000268,
+        macs_per_cycle=16384,           # 128 * 128 
+        energy_per_mac_nj=0.000604,
         sfe_ops_per_cycle=256*16,      
         sfe_energy_per_op_nj=0.00005, # 为了仿真给rram也加上SFE
     )
@@ -70,7 +70,7 @@ def run_one(json_path, freq_ghz=1.0, default_bits=16):
     loader = JSONModelLoader(default_bits=default_bits)
     model: Model = loader.build(spec)
 
-    compiler = SimpleCompiler(model, rram, dram, bits_per_element=default_bits, tile_K=256, tile_M=128, tile_N=128)
+    compiler = SimpleCompiler(model, rram, dram, bits_per_element=default_bits, tile_K=32, tile_M=128, tile_N=128)
     schedule = compiler.compile()
 
     sim = Simulator(model, schedule, rram, dram, dram_cu, rram_cu, bits_per_element=default_bits)
@@ -128,41 +128,41 @@ def main():
     ap.add_argument("--freq-ghz", type=float, default=1.0)
     args = ap.parse_args()
 
-    # 固定顺序（环节维度）
-    stages = [
-        "patch_embed_A.json",
-        "encoder_attention_A.json",
-        "encoder_ffn_A.json",
-        "connector_A.json",
-        "decoder_attention_A.json",
-        "decoder_ffn_A.json",
-    ]
-
-    # 层数放大（其余默认 1）
-    multipliers = {
-        "encoder_attention_A.json": args.enc_layers,
-        "encoder_ffn_A.json": args.enc_layers,
-        "decoder_attention_A.json": args.dec_layers,
-        "decoder_ffn_A.json": args.dec_layers,
-    }
-
-    #     # 固定顺序（环节维度）
+    # # 固定顺序（环节维度）
     # stages = [
-    #     "patch_embed_B.json",
-    #     "encoder_attention_B.json",
-    #     "encoder_ffn_B.json",
-    #     "connector_B.json",
-    #     "decoder_attention_B.json",
-    #     "decoder_ffn_B.json",
+    #     "patch_embed_A.json",
+    #     "encoder_attention_A.json",
+    #     "encoder_ffn_A.json",
+    #     "connector_A.json",
+    #     "decoder_attention_A.json",
+    #     "decoder_ffn_A.json",
     # ]
 
     # # 层数放大（其余默认 1）
     # multipliers = {
-    #     "encoder_attention_B.json": args.enc_layers,
-    #     "encoder_ffn_B.json": args.enc_layers,
-    #     "decoder_attention_B.json": args.dec_layers,
-    #     "decoder_ffn_B.json": args.dec_layers,
+    #     "encoder_attention_A.json": args.enc_layers,
+    #     "encoder_ffn_A.json": args.enc_layers,
+    #     "decoder_attention_A.json": args.dec_layers,
+    #     "decoder_ffn_A.json": args.dec_layers,
     # }
+
+        # 固定顺序（环节维度）
+    stages = [
+        "patch_embed_B.json",
+        "encoder_attention_B.json",
+        "encoder_ffn_B.json",
+        "connector_B.json",
+        "decoder_attention_B.json",
+        "decoder_ffn_B.json",
+    ]
+
+    # 层数放大（其余默认 1）
+    multipliers = {
+        "encoder_attention_B.json": args.enc_layers,
+        "encoder_ffn_B.json": args.enc_layers,
+        "decoder_attention_B.json": args.dec_layers,
+        "decoder_ffn_B.json": args.dec_layers,
+    }
 
     # —— 跑每个环节，按层数放大，保存“环节级”结果（用于环节占比）
     stage_results = {}
