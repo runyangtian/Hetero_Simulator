@@ -39,6 +39,8 @@ class JSONModelLoader:
                 m.add_op(LayerNorm(o['A'], o['C']))
             elif tpe == 'geluop':
                 m.add_op(GeluOp(o['A'], o['C']))
+            elif tpe == 'reluop':
+                m.add_op(ReluOp(o['A'], o['C']))
             elif tpe == 'addop':
                 m.add_op(AddOp(o['A'], o['B'], o['C']))
             elif tpe == 'softmaxop':

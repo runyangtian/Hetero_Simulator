@@ -48,6 +48,7 @@ class SimpleCompiler:
                 N, K2 = self.model.shapes[op.B].dims
             else:
                 K2, N = self.model.shapes[op.B].dims
+            # print(M, K, N, K2)
             assert K == K2
 
             for m0 in range(0, M, self.tile_M):

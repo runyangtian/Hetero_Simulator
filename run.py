@@ -12,13 +12,13 @@ from loader import JSONModelLoader
 from compiler import SimpleCompiler
 from simulator import Simulator
 
-stage_output_path = "./result/stages_summary_B.csv"
-ops_output_path = "./result/ops_summary_B.csv"
-total_output_path = "./result/totals_B.txt"
+# stage_output_path = "./result/stages_summary_mobilevlm.csv"
+# ops_output_path = "./result/ops_summary_mobilevlm.csv"
+# total_output_path = "./result/totals_mobilevlm.txt"
 
-# stage_output_path = "./result/stages_summary_A.csv"
-# ops_output_path = "./result/ops_summary_A.csv"
-# total_output_path = "./result/totals_A.txt"
+stage_output_path = "./result/stages_summary_fastvlm.csv"
+ops_output_path = "./result/ops_summary_fastvlm.csv"
+total_output_path = "./result/totals_fastvlm.txt"
 
 # —— 设备 & CU：保持与 main.py 一致 ——
 def make_devices_and_cus():
@@ -122,46 +122,47 @@ def pct(x, total):
 
 def main():
     ap = argparse.ArgumentParser(description="Batch-run, expand encoder/decoder layers, and aggregate.")
-    ap.add_argument("--model-dir", default="./model_json")
+    ap.add_argument("--model-dir", default="./mobileVLMv2_1.7B_336")
     ap.add_argument("--enc-layers", type=int, default=24, help="encoder_attention/ffn 的层数")
     ap.add_argument("--dec-layers", type=int, default=24, help="decoder_attention/ffn 的层数")
+    ap.add_argument("--stage4_layers", type=int, default=4, help="fastvlm stage4 的层数")
     ap.add_argument("--freq-ghz", type=float, default=1.0)
     args = ap.parse_args()
 
-    # # 固定顺序（环节维度）
+    # # 固定顺序 mobilevlm
     # stages = [
-    #     "patch_embed_A.json",
-    #     "encoder_attention_A.json",
-    #     "encoder_ffn_A.json",
-    #     "connector_A.json",
-    #     "decoder_attention_A.json",
-    #     "decoder_ffn_A.json",
+    #     "patch_embed_B.json",
+    #     "encoder_attention_B.json",
+    #     "encoder_ffn_B.json",
+    #     "connector_B.json",
+    #     "decoder_attention_B.json",
+    #     "decoder_ffn_B.json",
     # ]
 
     # # 层数放大（其余默认 1）
     # multipliers = {
-    #     "encoder_attention_A.json": args.enc_layers,
-    #     "encoder_ffn_A.json": args.enc_layers,
-    #     "decoder_attention_A.json": args.dec_layers,
-    #     "decoder_ffn_A.json": args.dec_layers,
+    #     "encoder_attention_B.json": args.enc_layers,
+    #     "encoder_ffn_B.json": args.enc_layers,
+    #     "decoder_attention_B.json": args.dec_layers,
+    #     "decoder_ffn_B.json": args.dec_layers,
     # }
 
-        # 固定顺序（环节维度）
+    # 固定顺序 fastvlm
     stages = [
-        "patch_embed_B.json",
-        "encoder_attention_B.json",
-        "encoder_ffn_B.json",
-        "connector_B.json",
-        "decoder_attention_B.json",
-        "decoder_ffn_B.json",
+        "stem_stage123.json",
+        "stage4.json",
+        "patch_embed_4_5.json",
+        "stage5.json",
+        "connector.json",
+        "decoder_attention.json",
+        "decoder_ffn.json",
     ]
 
     # 层数放大（其余默认 1）
     multipliers = {
-        "encoder_attention_B.json": args.enc_layers,
-        "encoder_ffn_B.json": args.enc_layers,
-        "decoder_attention_B.json": args.dec_layers,
-        "decoder_ffn_B.json": args.dec_layers,
+        "stage4.json": args.stage4_layers,
+        "decoder_attention.json": args.dec_layers,
+        "decoder_ffn.json": args.dec_layers,
     }
 
     # —— 跑每个环节，按层数放大，保存“环节级”结果（用于环节占比）

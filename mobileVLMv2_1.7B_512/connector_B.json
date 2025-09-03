@@ -1,0 +1,27 @@
+{
+  "description": "Connector (LDPv2) for MobileLLaMa1.4B, 2048 dim, (connector @RRAM, weights @RRAM)",
+
+  "tensors": [
+    {"name": "tokens_pe",   "shape": [1296, 2048],        "bits": 16, "device": "rram", "layer": 5},
+    {"name": "feat36x36",   "shape": [1024, 36, 36],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "W_pw1",       "shape": [2048, 1024, 1, 1],  "bits": 16, "device": "rram", "layer": 5},
+    {"name": "W_pw2",       "shape": [2048, 2048, 1, 1],  "bits": 16, "device": "rram", "layer": 5},
+    {"name": "W_dw",        "shape": [2048, 1, 3, 3],     "bits": 16, "device": "rram", "layer": 5},
+    {"name": "ldp_pw1",     "shape": [2048, 36, 36],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "ldp_pw2",     "shape": [2048, 36, 36],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "ldp_down",    "shape": [2048, 18, 18],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "ldp_dw",      "shape": [2048, 18, 18],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "ldp_out",     "shape": [2048, 18, 18],      "bits": 16, "device": "rram", "layer": 5},
+    {"name": "conn_out",    "shape": [324, 2048],         "bits": 16, "device": "rram", "layer": 5}
+  ],
+
+  "ops": [
+    {"type": "Conv2D",    "input_img": "feat36x36", "weight_name": "W_pw1", "out": "ldp_pw1",  "kernel_h": 1, "kernel_w": 1, "stride": 1, "padding": 0, "groups": 1},
+    {"type": "Conv2D",    "input_img": "ldp_pw1",   "weight_name": "W_pw2", "out": "ldp_pw2",  "kernel_h": 1, "kernel_w": 1, "stride": 1, "padding": 0, "groups": 1},
+    {"type": "AvgPool2D", "input_img": "ldp_pw2",   "out": "ldp_down",      "kernel_h": 2, "kernel_w": 2, "stride": 2, "padding": 0},
+    {"type": "Conv2D",    "input_img": "ldp_down",  "weight_name": "W_dw",  "out": "ldp_dw",   "kernel_h": 3, "kernel_w": 3, "stride": 1, "padding": 1, "groups": 2048},
+    {"type": "AddOp",     "A": "ldp_dw", "B": "ldp_down", "C": "ldp_out"},
+    {"type": "LayerNorm", "A": "conn_out", "C": "conn_out"},
+    {"type": "UCIeOp",    "size_bits": 10616832}
+  ]
+}

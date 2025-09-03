@@ -1,0 +1,543 @@
+{
+  "description": "FastViTHD stage5 attention, layers=2, embeds=1536",
+  "tensors": [
+    { "name": "s5_tokens",     "shape": [256, 1536],        "bits": 16, "device": "dram", "layer": 4},
+    { "name": "s5_norm",       "shape": [256, 1536],        "bits": 16, "device": "dram", "layer": 4},
+    { "name": "s5_out",        "shape": [1536, 6, 6],      "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_ctx_cat_s5", "shape": [256, 1536], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_out_s5",     "shape": [256, 1536], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_o_s5",          "shape": [1536, 1536], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "pool_s2",       "shape": [192, 16, 16],       "bits": 16, "device": "dram", "layer": 4},
+    { "name": "pool_s3",       "shape": [384, 16, 16],       "bits": 16, "device": "dram", "layer": 4},
+    { "name": "pool_s4",       "shape": [768, 16, 16],       "bits": 16, "device": "dram", "layer": 4},
+    { "name": "vision_tokens", "shape": [256, 2880],        "bits": 16, "device": "dram", "layer": 4},
+    
+    { "name": "s2_out",        "shape": [192, 128, 128],     "bits": 16, "device": "dram", "layer": 4},
+    { "name": "s3_out",        "shape": [384, 64, 64],     "bits": 16, "device": "dram", "layer": 4},
+    { "name": "s4_out",        "shape": [768, 32, 32],     "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "W_q5_h1",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h1",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h1",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h2",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h2",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h2",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h3",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h3",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h3",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h4",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h4",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h4",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h5",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h5",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h5",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h6",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h6",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h6",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h7",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h7",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h7",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h8",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h8",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h8",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h9",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h9",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h9",  "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h10", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h10", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h10","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h11", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h11", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h11","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h12", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h12", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h12","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h13", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h13", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h13","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h14", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h14", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h14","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h15", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h15", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h15","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h16", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h16", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h16","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h17", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h17", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h17","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h18", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h18", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h18","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h19", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h19", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h19","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h20", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h20", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h20","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h21", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h21", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h21","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h22", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h22", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h22","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h23", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h23", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h23","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "W_q5_h24", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_k5_h24", "shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4}, { "name": "W_v5_h24","shape": [1536, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "Q5_h1", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h1", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h1", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h2", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h2", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h2", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h3", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h3", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h3", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h4", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h4", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h4", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h5", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h5", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h5", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h6", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h6", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h6", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h7", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h7", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h7", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h8", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h8", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h8", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h9", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h9", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h9", "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h10","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h10","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h10","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h11","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h11","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h11","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h12","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h12","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h12","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h13","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h13","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h13","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h14","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h14","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h14","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h15","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h15","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h15","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h16","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h16","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h16","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h17","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h17","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h17","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h18","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h18","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h18","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h19","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h19","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h19","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h20","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h20","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h20","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h21","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h21","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h21","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h22","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h22","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h22","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h23","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h23","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h23","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "Q5_h24","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "K5_h24","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},  { "name": "V5_h24","shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h1",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h1",   "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h1",     "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h2",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h2",   "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h2",     "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h3",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h3",   "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h3",     "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h4",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h4",   "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h4",     "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h5",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h5",   "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h5",     "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h6",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h6",   "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h6",     "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h7",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h7",   "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h7",     "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h8",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h8",   "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h8",     "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h9",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h9",   "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h9",     "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h10", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h10",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h10",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h11", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h11",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h11",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h12", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h12",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h12",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h13", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h13",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h13",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h14", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h14",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h14",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h15", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h15",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h15",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h16", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h16",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h16",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h17", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h17",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h17",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h18", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h18",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h18",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h19", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h19",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h19",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h20", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h20",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h20",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h21", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h21",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h21",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h22", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h22",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h22",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h23", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h23",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h23",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4},
+
+    { "name": "attn_scores5_h24", "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_probs5_h24",  "shape": [256,256], "bits": 16, "device": "dram", "layer": 4},
+    { "name": "attn_ctx5_h24",    "shape": [256, 64], "bits": 16, "device": "dram", "layer": 4}
+    ],
+    
+    "ops": [
+    { "type": "LayerNorm", "A": "s5_tokens", "C": "s5_norm" },
+
+    { "type": "ParallelOps", "branches": [
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h1",  "C": "Q5_h1"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h1",  "C": "K5_h1"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h1",  "C": "V5_h1"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h2",  "C": "Q5_h2"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h2",  "C": "K5_h2"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h2",  "C": "V5_h2"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h3",  "C": "Q5_h3"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h3",  "C": "K5_h3"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h3",  "C": "V5_h3"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h4",  "C": "Q5_h4"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h4",  "C": "K5_h4"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h4",  "C": "V5_h4"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h5",  "C": "Q5_h5"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h5",  "C": "K5_h5"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h5",  "C": "V5_h5"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h6",  "C": "Q5_h6"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h6",  "C": "K5_h6"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h6",  "C": "V5_h6"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h7",  "C": "Q5_h7"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h7",  "C": "K5_h7"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h7",  "C": "V5_h7"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h8",  "C": "Q5_h8"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h8",  "C": "K5_h8"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h8",  "C": "V5_h8"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h9",  "C": "Q5_h9"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h9",  "C": "K5_h9"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h9",  "C": "V5_h9"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h10", "C": "Q5_h10" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h10", "C": "K5_h10" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h10", "C": "V5_h10" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h11", "C": "Q5_h11" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h11", "C": "K5_h11" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h11", "C": "V5_h11" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h12", "C": "Q5_h12" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h12", "C": "K5_h12" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h12", "C": "V5_h12" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h13", "C": "Q5_h13" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h13", "C": "K5_h13" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h13", "C": "V5_h13" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h14", "C": "Q5_h14" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h14", "C": "K5_h14" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h14", "C": "V5_h14" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h15", "C": "Q5_h15" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h15", "C": "K5_h15" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h15", "C": "V5_h15" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h16", "C": "Q5_h16" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h16", "C": "K5_h16" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h16", "C": "V5_h16" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h17", "C": "Q5_h17" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h17", "C": "K5_h17" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h17", "C": "V5_h17" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h18", "C": "Q5_h18" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h18", "C": "K5_h18" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h18", "C": "V5_h18" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h19", "C": "Q5_h19" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h19", "C": "K5_h19" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h19", "C": "V5_h19" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h20", "C": "Q5_h20" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h20", "C": "K5_h20" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h20", "C": "V5_h20" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h21", "C": "Q5_h21" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h21", "C": "K5_h21" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h21", "C": "V5_h21" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h22", "C": "Q5_h22" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h22", "C": "K5_h22" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h22", "C": "V5_h22" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h23", "C": "Q5_h23" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h23", "C": "K5_h23" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h23", "C": "V5_h23" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h24", "C": "Q5_h24" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h24", "C": "K5_h24" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h24", "C": "V5_h24" }
+    ]},
+
+    { "type": "ParallelOps", "branches": [
+      { "type": "MatMul", "A": "Q5_h1",  "B": "K5_h1",  "C": "attn_scores5_h1",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h2",  "B": "K5_h2",  "C": "attn_scores5_h2",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h3",  "B": "K5_h3",  "C": "attn_scores5_h3",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h4",  "B": "K5_h4",  "C": "attn_scores5_h4",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h5",  "B": "K5_h5",  "C": "attn_scores5_h5",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h6",  "B": "K5_h6",  "C": "attn_scores5_h6",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h7",  "B": "K5_h7",  "C": "attn_scores5_h7",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h8",  "B": "K5_h8",  "C": "attn_scores5_h8",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h9",  "B": "K5_h9",  "C": "attn_scores5_h9",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h10", "B": "K5_h10", "C": "attn_scores5_h10", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h11", "B": "K5_h11", "C": "attn_scores5_h11", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h12", "B": "K5_h12", "C": "attn_scores5_h12", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h13", "B": "K5_h13", "C": "attn_scores5_h13", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h14", "B": "K5_h14", "C": "attn_scores5_h14", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h15", "B": "K5_h15", "C": "attn_scores5_h15", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h16", "B": "K5_h16", "C": "attn_scores5_h16", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h17", "B": "K5_h17", "C": "attn_scores5_h17", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h18", "B": "K5_h18", "C": "attn_scores5_h18", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h19", "B": "K5_h19", "C": "attn_scores5_h19", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h20", "B": "K5_h20", "C": "attn_scores5_h20", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h21", "B": "K5_h21", "C": "attn_scores5_h21", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h22", "B": "K5_h22", "C": "attn_scores5_h22", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h23", "B": "K5_h23", "C": "attn_scores5_h23", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h24", "B": "K5_h24", "C": "attn_scores5_h24", "transpose_B": true }
+    ]},
+
+    { "type": "ParallelOps", "branches": [
+      { "type": "SoftmaxOp", "A": "attn_scores5_h1",  "axis": -1, "C": "attn_probs5_h1"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h2",  "axis": -1, "C": "attn_probs5_h2"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h3",  "axis": -1, "C": "attn_probs5_h3"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h4",  "axis": -1, "C": "attn_probs5_h4"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h5",  "axis": -1, "C": "attn_probs5_h5"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h6",  "axis": -1, "C": "attn_probs5_h6"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h7",  "axis": -1, "C": "attn_probs5_h7"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h8",  "axis": -1, "C": "attn_probs5_h8"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h9",  "axis": -1, "C": "attn_probs5_h9"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h10", "axis": -1, "C": "attn_probs5_h10" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h11", "axis": -1, "C": "attn_probs5_h11" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h12", "axis": -1, "C": "attn_probs5_h12" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h13", "axis": -1, "C": "attn_probs5_h13" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h14", "axis": -1, "C": "attn_probs5_h14" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h15", "axis": -1, "C": "attn_probs5_h15" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h16", "axis": -1, "C": "attn_probs5_h16" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h17", "axis": -1, "C": "attn_probs5_h17" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h18", "axis": -1, "C": "attn_probs5_h18" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h19", "axis": -1, "C": "attn_probs5_h19" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h20", "axis": -1, "C": "attn_probs5_h20" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h21", "axis": -1, "C": "attn_probs5_h21" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h22", "axis": -1, "C": "attn_probs5_h22" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h23", "axis": -1, "C": "attn_probs5_h23" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h24", "axis": -1, "C": "attn_probs5_h24" }
+    ]},
+
+    { "type": "ParallelOps", "branches": [
+      { "type": "MatMul", "A": "attn_probs5_h1",  "B": "V5_h1",  "C": "attn_ctx5_h1"  },
+      { "type": "MatMul", "A": "attn_probs5_h2",  "B": "V5_h2",  "C": "attn_ctx5_h2"  },
+      { "type": "MatMul", "A": "attn_probs5_h3",  "B": "V5_h3",  "C": "attn_ctx5_h3"  },
+      { "type": "MatMul", "A": "attn_probs5_h4",  "B": "V5_h4",  "C": "attn_ctx5_h4"  },
+      { "type": "MatMul", "A": "attn_probs5_h5",  "B": "V5_h5",  "C": "attn_ctx5_h5"  },
+      { "type": "MatMul", "A": "attn_probs5_h6",  "B": "V5_h6",  "C": "attn_ctx5_h6"  },
+      { "type": "MatMul", "A": "attn_probs5_h7",  "B": "V5_h7",  "C": "attn_ctx5_h7"  },
+      { "type": "MatMul", "A": "attn_probs5_h8",  "B": "V5_h8",  "C": "attn_ctx5_h8"  },
+      { "type": "MatMul", "A": "attn_probs5_h9",  "B": "V5_h9",  "C": "attn_ctx5_h9"  },
+      { "type": "MatMul", "A": "attn_probs5_h10", "B": "V5_h10", "C": "attn_ctx5_h10" },
+      { "type": "MatMul", "A": "attn_probs5_h11", "B": "V5_h11", "C": "attn_ctx5_h11" },
+      { "type": "MatMul", "A": "attn_probs5_h12", "B": "V5_h12", "C": "attn_ctx5_h12" },
+      { "type": "MatMul", "A": "attn_probs5_h13", "B": "V5_h13", "C": "attn_ctx5_h13" },
+      { "type": "MatMul", "A": "attn_probs5_h14", "B": "V5_h14", "C": "attn_ctx5_h14" },
+      { "type": "MatMul", "A": "attn_probs5_h15", "B": "V5_h15", "C": "attn_ctx5_h15" },
+      { "type": "MatMul", "A": "attn_probs5_h16", "B": "V5_h16", "C": "attn_ctx5_h16" },
+      { "type": "MatMul", "A": "attn_probs5_h17", "B": "V5_h17", "C": "attn_ctx5_h17" },
+      { "type": "MatMul", "A": "attn_probs5_h18", "B": "V5_h18", "C": "attn_ctx5_h18" },
+      { "type": "MatMul", "A": "attn_probs5_h19", "B": "V5_h19", "C": "attn_ctx5_h19" },
+      { "type": "MatMul", "A": "attn_probs5_h20", "B": "V5_h20", "C": "attn_ctx5_h20" },
+      { "type": "MatMul", "A": "attn_probs5_h21", "B": "V5_h21", "C": "attn_ctx5_h21" },
+      { "type": "MatMul", "A": "attn_probs5_h22", "B": "V5_h22", "C": "attn_ctx5_h22" },
+      { "type": "MatMul", "A": "attn_probs5_h23", "B": "V5_h23", "C": "attn_ctx5_h23" },
+      { "type": "MatMul", "A": "attn_probs5_h24", "B": "V5_h24", "C": "attn_ctx5_h24" }
+    ]},
+
+    { "type": "MatMul", "A": "attn_ctx_cat_s5", "B": "W_o_s5", "C": "attn_out_s5" },
+    { "type": "AddOp",  "A": "attn_out_s5", "B": "s5_tokens", "C": "s5_tokens" },
+
+     { "type": "LayerNorm", "A": "s5_tokens", "C": "s5_norm" },
+
+    { "type": "ParallelOps", "branches": [
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h1",  "C": "Q5_h1"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h1",  "C": "K5_h1"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h1",  "C": "V5_h1"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h2",  "C": "Q5_h2"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h2",  "C": "K5_h2"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h2",  "C": "V5_h2"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h3",  "C": "Q5_h3"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h3",  "C": "K5_h3"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h3",  "C": "V5_h3"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h4",  "C": "Q5_h4"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h4",  "C": "K5_h4"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h4",  "C": "V5_h4"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h5",  "C": "Q5_h5"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h5",  "C": "K5_h5"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h5",  "C": "V5_h5"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h6",  "C": "Q5_h6"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h6",  "C": "K5_h6"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h6",  "C": "V5_h6"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h7",  "C": "Q5_h7"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h7",  "C": "K5_h7"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h7",  "C": "V5_h7"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h8",  "C": "Q5_h8"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h8",  "C": "K5_h8"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h8",  "C": "V5_h8"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h9",  "C": "Q5_h9"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h9",  "C": "K5_h9"  },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h9",  "C": "V5_h9"  },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h10", "C": "Q5_h10" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h10", "C": "K5_h10" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h10", "C": "V5_h10" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h11", "C": "Q5_h11" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h11", "C": "K5_h11" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h11", "C": "V5_h11" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h12", "C": "Q5_h12" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h12", "C": "K5_h12" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h12", "C": "V5_h12" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h13", "C": "Q5_h13" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h13", "C": "K5_h13" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h13", "C": "V5_h13" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h14", "C": "Q5_h14" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h14", "C": "K5_h14" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h14", "C": "V5_h14" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h15", "C": "Q5_h15" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h15", "C": "K5_h15" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h15", "C": "V5_h15" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h16", "C": "Q5_h16" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h16", "C": "K5_h16" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h16", "C": "V5_h16" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h17", "C": "Q5_h17" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h17", "C": "K5_h17" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h17", "C": "V5_h17" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h18", "C": "Q5_h18" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h18", "C": "K5_h18" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h18", "C": "V5_h18" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h19", "C": "Q5_h19" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h19", "C": "K5_h19" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h19", "C": "V5_h19" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h20", "C": "Q5_h20" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h20", "C": "K5_h20" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h20", "C": "V5_h20" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h21", "C": "Q5_h21" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h21", "C": "K5_h21" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h21", "C": "V5_h21" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h22", "C": "Q5_h22" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h22", "C": "K5_h22" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h22", "C": "V5_h22" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h23", "C": "Q5_h23" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h23", "C": "K5_h23" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h23", "C": "V5_h23" },
+
+      { "type": "MatMul", "A": "s5_norm", "B": "W_q5_h24", "C": "Q5_h24" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_k5_h24", "C": "K5_h24" },
+      { "type": "MatMul", "A": "s5_norm", "B": "W_v5_h24", "C": "V5_h24" }
+    ]},
+
+    { "type": "ParallelOps", "branches": [
+      { "type": "MatMul", "A": "Q5_h1",  "B": "K5_h1",  "C": "attn_scores5_h1",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h2",  "B": "K5_h2",  "C": "attn_scores5_h2",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h3",  "B": "K5_h3",  "C": "attn_scores5_h3",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h4",  "B": "K5_h4",  "C": "attn_scores5_h4",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h5",  "B": "K5_h5",  "C": "attn_scores5_h5",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h6",  "B": "K5_h6",  "C": "attn_scores5_h6",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h7",  "B": "K5_h7",  "C": "attn_scores5_h7",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h8",  "B": "K5_h8",  "C": "attn_scores5_h8",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h9",  "B": "K5_h9",  "C": "attn_scores5_h9",  "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h10", "B": "K5_h10", "C": "attn_scores5_h10", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h11", "B": "K5_h11", "C": "attn_scores5_h11", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h12", "B": "K5_h12", "C": "attn_scores5_h12", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h13", "B": "K5_h13", "C": "attn_scores5_h13", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h14", "B": "K5_h14", "C": "attn_scores5_h14", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h15", "B": "K5_h15", "C": "attn_scores5_h15", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h16", "B": "K5_h16", "C": "attn_scores5_h16", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h17", "B": "K5_h17", "C": "attn_scores5_h17", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h18", "B": "K5_h18", "C": "attn_scores5_h18", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h19", "B": "K5_h19", "C": "attn_scores5_h19", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h20", "B": "K5_h20", "C": "attn_scores5_h20", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h21", "B": "K5_h21", "C": "attn_scores5_h21", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h22", "B": "K5_h22", "C": "attn_scores5_h22", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h23", "B": "K5_h23", "C": "attn_scores5_h23", "transpose_B": true },
+      { "type": "MatMul", "A": "Q5_h24", "B": "K5_h24", "C": "attn_scores5_h24", "transpose_B": true }
+    ]},
+
+    { "type": "ParallelOps", "branches": [
+      { "type": "SoftmaxOp", "A": "attn_scores5_h1",  "axis": -1, "C": "attn_probs5_h1"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h2",  "axis": -1, "C": "attn_probs5_h2"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h3",  "axis": -1, "C": "attn_probs5_h3"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h4",  "axis": -1, "C": "attn_probs5_h4"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h5",  "axis": -1, "C": "attn_probs5_h5"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h6",  "axis": -1, "C": "attn_probs5_h6"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h7",  "axis": -1, "C": "attn_probs5_h7"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h8",  "axis": -1, "C": "attn_probs5_h8"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h9",  "axis": -1, "C": "attn_probs5_h9"  },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h10", "axis": -1, "C": "attn_probs5_h10" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h11", "axis": -1, "C": "attn_probs5_h11" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h12", "axis": -1, "C": "attn_probs5_h12" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h13", "axis": -1, "C": "attn_probs5_h13" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h14", "axis": -1, "C": "attn_probs5_h14" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h15", "axis": -1, "C": "attn_probs5_h15" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h16", "axis": -1, "C": "attn_probs5_h16" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h17", "axis": -1, "C": "attn_probs5_h17" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h18", "axis": -1, "C": "attn_probs5_h18" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h19", "axis": -1, "C": "attn_probs5_h19" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h20", "axis": -1, "C": "attn_probs5_h20" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h21", "axis": -1, "C": "attn_probs5_h21" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h22", "axis": -1, "C": "attn_probs5_h22" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h23", "axis": -1, "C": "attn_probs5_h23" },
+      { "type": "SoftmaxOp", "A": "attn_scores5_h24", "axis": -1, "C": "attn_probs5_h24" }
+    ]},
+
+    { "type": "ParallelOps", "branches": [
+      { "type": "MatMul", "A": "attn_probs5_h1",  "B": "V5_h1",  "C": "attn_ctx5_h1"  },
+      { "type": "MatMul", "A": "attn_probs5_h2",  "B": "V5_h2",  "C": "attn_ctx5_h2"  },
+      { "type": "MatMul", "A": "attn_probs5_h3",  "B": "V5_h3",  "C": "attn_ctx5_h3"  },
+      { "type": "MatMul", "A": "attn_probs5_h4",  "B": "V5_h4",  "C": "attn_ctx5_h4"  },
+      { "type": "MatMul", "A": "attn_probs5_h5",  "B": "V5_h5",  "C": "attn_ctx5_h5"  },
+      { "type": "MatMul", "A": "attn_probs5_h6",  "B": "V5_h6",  "C": "attn_ctx5_h6"  },
+      { "type": "MatMul", "A": "attn_probs5_h7",  "B": "V5_h7",  "C": "attn_ctx5_h7"  },
+      { "type": "MatMul", "A": "attn_probs5_h8",  "B": "V5_h8",  "C": "attn_ctx5_h8"  },
+      { "type": "MatMul", "A": "attn_probs5_h9",  "B": "V5_h9",  "C": "attn_ctx5_h9"  },
+      { "type": "MatMul", "A": "attn_probs5_h10", "B": "V5_h10", "C": "attn_ctx5_h10" },
+      { "type": "MatMul", "A": "attn_probs5_h11", "B": "V5_h11", "C": "attn_ctx5_h11" },
+      { "type": "MatMul", "A": "attn_probs5_h12", "B": "V5_h12", "C": "attn_ctx5_h12" },
+      { "type": "MatMul", "A": "attn_probs5_h13", "B": "V5_h13", "C": "attn_ctx5_h13" },
+      { "type": "MatMul", "A": "attn_probs5_h14", "B": "V5_h14", "C": "attn_ctx5_h14" },
+      { "type": "MatMul", "A": "attn_probs5_h15", "B": "V5_h15", "C": "attn_ctx5_h15" },
+      { "type": "MatMul", "A": "attn_probs5_h16", "B": "V5_h16", "C": "attn_ctx5_h16" },
+      { "type": "MatMul", "A": "attn_probs5_h17", "B": "V5_h17", "C": "attn_ctx5_h17" },
+      { "type": "MatMul", "A": "attn_probs5_h18", "B": "V5_h18", "C": "attn_ctx5_h18" },
+      { "type": "MatMul", "A": "attn_probs5_h19", "B": "V5_h19", "C": "attn_ctx5_h19" },
+      { "type": "MatMul", "A": "attn_probs5_h20", "B": "V5_h20", "C": "attn_ctx5_h20" },
+      { "type": "MatMul", "A": "attn_probs5_h21", "B": "V5_h21", "C": "attn_ctx5_h21" },
+      { "type": "MatMul", "A": "attn_probs5_h22", "B": "V5_h22", "C": "attn_ctx5_h22" },
+      { "type": "MatMul", "A": "attn_probs5_h23", "B": "V5_h23", "C": "attn_ctx5_h23" },
+      { "type": "MatMul", "A": "attn_probs5_h24", "B": "V5_h24", "C": "attn_ctx5_h24" }
+    ]},
+
+    { "type": "MatMul", "A": "attn_ctx_cat_s5", "B": "W_o_s5", "C": "attn_out_s5" },
+    { "type": "AddOp",  "A": "attn_out_s5", "B": "s5_tokens", "C": "s5_tokens" },
+
+    { "type": "AvgPool2D", "input_img": "s2_out", "out": "pool_s2", "kernel_h": 8, "kernel_w": 8, "stride": 8, "padding": 0 },
+    { "type": "AvgPool2D", "input_img": "s3_out", "out": "pool_s3", "kernel_h": 4, "kernel_w": 4, "stride": 4, "padding": 0 },
+    { "type": "AvgPool2D", "input_img": "s4_out", "out": "pool_s4", "kernel_h": 2, "kernel_w": 2, "stride": 2, "padding": 0 },
+
+    { "type": "LayerNorm", "A": "vision_tokens", "C": "vision_tokens" },
+    {"type": "UCIeOp", "size_bits": 11796480}
+    ]
+}

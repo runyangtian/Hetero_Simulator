@@ -1,0 +1,15 @@
+{
+  "description": "ViT patching+embedding (PatchEmb&weights @DRAM)",
+  "tensors": [
+    {"name": "img",        "shape": [3, 1024, 1024],   "bits": 16, "device": "dram", "layer": 5},
+    {"name": "W_embed",    "shape": [588, 1024],     "bits": 16,  "device": "dram", "layer": 5},
+    {"name": "feat74x74",  "shape": [1024, 74, 74],  "bits": 16, "device": "dram", "layer": 5},
+    {"name": "tokens",     "shape": [5476, 1024],     "bits": 16, "device": "dram", "layer": 5},
+    {"name": "pos_embed",  "shape": [5476, 1024],     "bits": 16, "device": "dram", "layer": 5},
+    {"name": "tokens_pe",  "shape": [5476, 1024],     "bits": 16, "device": "dram", "layer": 5}
+  ],
+  "ops": [
+    {"type": "Conv2D", "input_img": "img", "weight_name": "W_embed", "out": "feat74x74", "kernel_h": 14, "kernel_w": 14, "stride": 14, "padding": 0, "groups": 1},
+    {"type": "AddOp", "A": "tokens", "B": "pos_embed", "C": "tokens_pe"}
+  ]
+}

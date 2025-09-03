@@ -1,0 +1,19 @@
+{
+  "description": "ViT encoder single layer (ViT-L 24 layers, 16 heads, 1024 emb_dim) (Attn&weights @DRAM, FFN&weights @RRAM)",
+  
+  "tensors": [
+    {"name": "W1_0",  "shape": [1024, 4096], "bits": 16, "device": "rram", "layer": 4},
+    {"name": "W2_0",  "shape": [4096, 1024], "bits": 16, "device": "rram", "layer": 4},
+    {"name": "ff1",   "shape": [1296, 4096], "bits": 16, "device": "rram", "layer": 2},
+    {"name": "attn_out", "shape": [1296, 1024], "bits": 16, "device": "rram", "layer": 2},
+    {"name": "ff2",   "shape": [1296, 1024], "bits": 16, "device": "rram", "layer": 3}
+  ],
+
+  "ops": [
+    {"type": "MatMul", "A": "attn_out", "B": "W1_0", "C": "ff1"},
+    {"type": "GeluOp", "A": "ff1", "C": "ff1"},
+    {"type": "MatMul", "A": "ff1", "B": "W2_0", "C": "ff2"},
+    {"type": "AddOp",  "A": "ff2", "B": "attn_out", "C": "ff2"},
+    {"type": "UCIeOp", "size_bits": 21233664}
+  ]
+}
