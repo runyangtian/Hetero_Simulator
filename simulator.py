@@ -12,7 +12,7 @@ from operations import (
 
 
 class Simulator:
-    def __init__(self, model: Model, schedule: List[Dict[str, Any]], rram: MemoryDevice, dram: MemoryDevice, dram_cu: ComputeUnit, rram_cu: ComputeUnit, bits_per_element=8):
+    def __init__(self, model: Model, schedule: List[Dict[str, Any]], rram: MemoryDevice, dram: MemoryDevice, dram_cu: ComputeUnit, rram_cu: ComputeUnit):
         self.model = model
         self.schedule = schedule
         self.rram, self.dram = rram, dram
@@ -22,25 +22,10 @@ class Simulator:
         self.rram_cu = rram_cu
 
         self.stats = Stats()
-        self.bpe_bits = bits_per_element
+        # self.bpe_bits = bits_per_element
         self.ucie_bandwidth = 2048      # 32 Gb/s × 64 = 2,048 Gb/s；1 GHz → 2,048 Gb/s ÷ 1e9 = 2,048 bit/cycle，全双工则*2
         self.ucie_energy_per_bit = 0.5  # pJ/bit
         self.layer_latency_max_cycles = 3 # 0.01ns/layer, 256 layer in total
-
-    # def _tile_wave_overhead(self, cu, m: int, n: int) -> int:
-    #     """
-    #     近似：二维 systolic 一条波的填/排空 = (m_eff-1) + (n_eff-1)
-    #     - DRAM_CU 当作 8x8
-    #     - RRAM_CU 当作 4x4
-    #     """
-    #     # 基于 CU 粗略设定阵列 tile 尺寸
-    #     if getattr(cu, 'name', '') == 'RRAM_CU':
-    #         mt, nt = 4, 4
-    #     else:
-    #         mt, nt = 2, 2
-    #     m_eff = max(1, min(m, mt))
-    #     n_eff = max(1, min(n, nt))
-    #     return (m_eff - 1) + (n_eff - 1)
 
 
     def _mem_read_cost(self, dev: MemoryDevice, size_bits: int, src_layer: int = -1):
@@ -50,7 +35,10 @@ class Simulator:
 
         hops = dev.tsv_hops(src_layer)
         tsv_cycles = dev.tsv_cycles_for(size_bits, hops)
-        return cycles + tsv_cycles, energy  # 这里先只加延迟；能量如需可扩展
+        if tsv_cycles == 0:
+            return 0, 0
+        else:
+            return cycles + tsv_cycles, energy  # 这里先只加延迟；能量如需可扩展
 
     def _mem_write_cost(self, dev: MemoryDevice, size_bits: int, src_layer: int = -1):
         bw_cycles = math.ceil(size_bits / dev.write_bw_bits_per_cycle) if dev.write_bw_bits_per_cycle > 0 else 0
@@ -59,8 +47,10 @@ class Simulator:
 
         hops = dev.tsv_hops(src_layer)
         tsv_cycles = dev.tsv_cycles_for(size_bits, hops)
-
-        return cycles + tsv_cycles, energy
+        if tsv_cycles == 0:
+            return 0, 0
+        else:
+            return cycles + tsv_cycles, energy
 
     def _compute_cost_engine(self, amount_ops: int, engine: str, cu: ComputeUnit):
         if amount_ops <= 0:
@@ -81,7 +71,7 @@ class Simulator:
         """小工具：由张量名取回 (mem_device, layer, size_bits)"""
         t = self.model.tensors[tname]
         mem = self.rram if t.device == 'rram' else self.dram
-        return mem, t.layer, t.size_bits
+        return mem, t.layer, t.bits_per_element
 
     def _calculate_item_cost(self, item: Dict[str, Any]) -> Tuple[int, float, int, int, int]:
         ttype = item['type']
@@ -90,15 +80,16 @@ class Simulator:
 
         if ttype == 'matmul_tile':
             m, n, k = item['msize'], item['nsize'], item['ksize']
-            bpe = self.bpe_bits  # 若 A/B/C 位宽不同，可改为由张量元数据读取
-            A_tile_bits = m * k * bpe
-            B_tile_bits = k * n * bpe
-            C_tile_bits = m * n * bpe
 
             # --- 设备与层 ---
-            memA, layerA, _ = self._dev_and_layer(op.A)
-            memB, layerB, _ = self._dev_and_layer(op.B)
-            memC, layerC, _ = self._dev_and_layer(op.C)
+            memA, layerA, bpeA = self._dev_and_layer(op.A)
+            memB, layerB, bpeB = self._dev_and_layer(op.B)
+            memC, layerC, bpeC = self._dev_and_layer(op.C)
+
+            # print(bpeA, bpeB, bpeC)
+            A_tile_bits = m * k * bpeA
+            B_tile_bits = k * n * bpeB
+            C_tile_bits = m * n * bpeC
 
             # --- 读 A/B（与你原先一致）---
             cA, eA = self._mem_read_cost(memA, A_tile_bits, src_layer=layerA)
@@ -114,9 +105,6 @@ class Simulator:
             # 用你的引擎计算能量，但忽略它返回的周期（我们自己算周期）
             _, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
 
-            # systolic 的“一条波”填/排空开销（近似）
-            # wave_ovhd = self._tile_wave_overhead(cu_sel, m, n)
-
             # 计算周期 ≈ 吞吐周期 + 一条波的填/排空
             cc_tput = (macs + cu_sel.macs_per_cycle - 1) // cu_sel.macs_per_cycle
             cc = cc_tput #+ wave_ovhd
@@ -126,8 +114,10 @@ class Simulator:
 
             # --- 汇总：读与算重叠，最后再写 ---
             # cycles = c_in + cc + cW
-            cycles = max(c_in, cc, cW)
-            energy = eA + eB + ec + eW
+            # print(c_in, cc, cW)
+            reuse_ratio=0.4
+            cycles = max(c_in*(1-reuse_ratio), cc, cW*(1-reuse_ratio))
+            energy = eA*(1-reuse_ratio) + eB*(1-reuse_ratio) + ec + eW*(1-reuse_ratio)
 
             bits_read = A_tile_bits + B_tile_bits
             bits_written = C_tile_bits
@@ -149,6 +139,7 @@ class Simulator:
             Ho = (H + 2*op.ph - op.kh) // op.sh + 1
             Wo = (W + 2*op.pw - op.kw) // op.sw + 1
 
+            memO, layerO, bpeO = self._dev_and_layer(op.out_name)
             # === GEMM 等价尺寸 + MACs / out_bits ===
             if len(wshape) == 2:
                 # Patch-Embed: [Cpatch, Cout]
@@ -157,7 +148,7 @@ class Simulator:
                 k = Cpatch
                 n = Cout
                 macs = m * k * n
-                out_bits = m * n * self.bpe_bits
+                out_bits = m * n * bpeO
             else:
                 # 通用卷积: [Cout, Cin/groups, Kh, Kw]
                 Cout = wshape[0]
@@ -166,10 +157,10 @@ class Simulator:
                 k = Cin_per_g * op.kh * op.kw
                 n = Cout
                 macs = m * k * n
-                out_bits = m * n * self.bpe_bits
+                out_bits = m * n * bpeO
 
             # === 选择 CU：按输出张量所在 device（与你原逻辑保持一致）===
-            memO, layerO, _ = self._dev_and_layer(op.out_name)
+            
             cu_sel = self.rram_cu if (memO is self.rram) else self.dram_cu
 
             # 吞吐周期（近似）+ 一条波填/排空
@@ -183,10 +174,11 @@ class Simulator:
             # === 写回输出 ===
             cOut, eOut = self._mem_write_cost(memO, out_bits, src_layer=layerO)
 
+            reuse_ratio=0.4
             # === 汇总（读与算重叠，最后写）===
-            cycles = max(max(cWrd, cI), cc, cOut)
+            cycles = max(max(cWrd, cI)*(1-reuse_ratio), cc, cOut*(1-reuse_ratio))
             # cycles = max(cWrd, cI) + cc + cOut
-            energy = eWrd + eI + ec + eOut
+            energy = eWrd*(1-reuse_ratio) + eI*(1-reuse_ratio) + ec + eOut*(1-reuse_ratio)
             bits_read = weight_bits + img_bits
             bits_written = out_bits
 

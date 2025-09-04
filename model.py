@@ -14,7 +14,7 @@ class Model:
     def add_tensor(self, name: str, shape: Tuple[int, ...], bits_per_element=32, device='dram', layer: int=-1):
         shape_obj = TensorShape(shape)
         size_bits = int(np.prod(shape) * bits_per_element)
-        self.tensors[name] = Tensor(name, shape_obj, size_bits, device, layer)
+        self.tensors[name] = Tensor(name, shape_obj, size_bits, device, layer, bits_per_element)
         self.shapes[name] = shape_obj
 
     def add_op(self, op: Op):

@@ -1,0 +1,17 @@
+{
+  "description": "Connector(Projector): vision_tokens [36,2880] -> LLM hidden [36,4096]",
+  "tensors": [
+    { "name": "vision_tokens",   "shape": [36, 2880], "bits": 16, "device": "rram", "layer": 5},
+    { "name": "W_proj1",         "shape": [2880, 11520], "bits": 4, "device": "rram", "layer": 5},
+    { "name": "conn_hidden",     "shape": [36, 11520],   "bits": 16, "device": "rram", "layer": 5},
+    { "name": "W_proj2",         "shape": [11520, 2048], "bits": 4, "device": "rram", "layer": 5},
+    { "name": "connector_out",   "shape": [36, 2048],   "bits": 16, "device": "rram", "layer": 5}
+  ],
+  "ops": [
+    { "type": "LayerNorm", "A": "vision_tokens", "C": "vision_tokens" },
+    { "type": "MatMul",  "A": "vision_tokens", "B": "W_proj1", "C": "conn_hidden" },
+    { "type": "GeluOp",    "A": "conn_hidden", "C": "conn_hidden" },
+    { "type": "MatMul",  "A": "conn_hidden", "B": "W_proj2", "C": "connector_out" },
+    {"type": "UCIeOp", "size_bits": 1179648}
+  ]
+}

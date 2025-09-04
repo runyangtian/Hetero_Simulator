@@ -2,7 +2,7 @@
   "description": "ViT patching+embedding (PatchEmb&weights @DRAM)",
   "tensors": [
     {"name": "img",        "shape": [3, 512, 512],   "bits": 16, "device": "dram", "layer": 5},
-    {"name": "W_embed",    "shape": [588, 1024],     "bits": 16,  "device": "dram", "layer": 5},
+    {"name": "W_embed",    "shape": [588, 1024],     "bits": 4,  "device": "dram", "layer": 5},
     {"name": "feat36x36",  "shape": [1024, 36, 36],  "bits": 16, "device": "dram", "layer": 5},
     {"name": "tokens",     "shape": [1296, 1024],     "bits": 16, "device": "dram", "layer": 5},
     {"name": "pos_embed",  "shape": [1296, 1024],     "bits": 16, "device": "dram", "layer": 5},

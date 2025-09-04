@@ -2,8 +2,8 @@
   "description": "MobileLLama2.7B single layer, 32 layers, 32 heads, 2560 dim, (Attn&weights&KV cache @DRAM, FFN@weights @RRAM)",
 
   "tensors": [
-    {"name": "W1_0",         "shape": [2560, 10240], "bits": 16, "device": "rram", "layer": 4},
-    {"name": "W2_0",         "shape": [10240, 2560], "bits": 16, "device": "rram", "layer": 4},
+    {"name": "W1_0",         "shape": [2560, 10240], "bits": 4, "device": "rram", "layer": 4},
+    {"name": "W2_0",         "shape": [10240, 2560], "bits": 4, "device": "rram", "layer": 4},
     {"name": "attn_out",     "shape": [1168, 2560],  "bits": 16, "device": "dram", "layer": 2},
     {"name": "ff1",          "shape": [1168, 10240], "bits": 16, "device": "rram", "layer": 2},
     {"name": "ff2",          "shape": [1168, 2560],  "bits": 16, "device": "rram", "layer": 3}

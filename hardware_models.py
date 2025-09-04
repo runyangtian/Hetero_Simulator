@@ -18,6 +18,7 @@ class Tensor:
     size_bits: int
     device: str = "dram"  # 'dram' or 'rram'
     layer: int = -1
+    bits_per_element: int = 16 
 
     @property
     def size_bytes(self) -> int:
@@ -43,24 +44,24 @@ class MemoryDevice:
     # 帶寬（每個 cycle 可傳送幾多 bit）
     tsv_bw_bits_per_cycle: int = 262144          # 例：~128 GB/s@1GHz，可按需調
     # 固定底延遲：不論跨幾多層都有（介面/握手/同步等）
-    tsv_base_latency_cycles: int = 3          # <-- 新增：固定底延遲
+    tsv_base_latency_cycles: int = 3
     # 每 hop 的附加延遲（與 hop 數線性關係）
     tsv_fixed_latency_per_hop: int = 1
 
     def tsv_hops(self, src_layer: int, dst_layer: int = None) -> int:
+        """計算 hop 數。如果 src_layer==0（邏輯層），則無需 TSV 傳輸"""
         if src_layer is None or src_layer < 0:
+            return 0
+        if src_layer == self.logic_layer:  # 在邏輯層，不經 TSV
             return 0
         dst = self.logic_layer if dst_layer is None else dst_layer
         return abs(int(src_layer) - int(dst))
 
     def tsv_cycles_for(self, size_bits: int, hops: int) -> int:
-        """固定底延遲 +（一次）串行化 + 每 hop 固定開銷"""
-        if size_bits <= 0:
+        """固定底延遲 + 串行化 + hop 延遲。如果 src_layer=0，就不加 TSV 延遲"""
+        if size_bits <= 0 or hops == 0:  # 在邏輯層，無 TSV 延遲
             return 0
-        hops = max(0, int(hops))
-        # 一次性串行化時間：ceil(size / BW)（其實就係整數版的向上取整）
         ser = (size_bits + self.tsv_bw_bits_per_cycle - 1) // self.tsv_bw_bits_per_cycle
-        # 總延遲
         return self.tsv_base_latency_cycles + ser + hops * self.tsv_fixed_latency_per_hop
 
     def can_allocate(self, size_bits: int) -> bool:
@@ -74,6 +75,7 @@ class MemoryDevice:
 
     def free(self, size_bits: int) -> None:
         self.used_bits = max(0, self.used_bits - size_bits)
+
 
 # ----------------------------- Compute unit model -----------------------------
 

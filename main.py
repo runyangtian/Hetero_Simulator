@@ -31,8 +31,8 @@ def main():
     rram = MemoryDevice(
         name='3D_RRAM',
         capacity_bits = int(2*1024*1024*1024*8),        # 2GB
-        read_bw_bits_per_cycle  = 4096,
-        write_bw_bits_per_cycle = 4096,
+        read_bw_bits_per_cycle  = 8192,
+        write_bw_bits_per_cycle = 8192,
         read_energy_per_bit  = 0.0004,          # nJ/bit
         write_energy_per_bit = 0.00133,         # nJ/bit
         read_latency_cycles = 3,
@@ -49,7 +49,7 @@ def main():
 
     rram_cu = ComputeUnit(
         name='RRAM_CU',
-        macs_per_cycle=16384,                             #16384,
+        macs_per_cycle=65536,                             #16384,
         energy_per_mac_nj=0.000604,
         sfe_ops_per_cycle=256*16,      
         sfe_energy_per_op_nj=0.00005, # 为了仿真给rram也加上SFE
@@ -66,13 +66,12 @@ def main():
         print("No JSON file provided.")
 
     # Compile
-    # compiler = SimpleCompiler(model, rram, dram, cu, bits_per_element=16, tile_K=256, tile_M=128, tile_N=128)
-    compiler = SimpleCompiler(model, rram, dram, bits_per_element=16, tile_K=256, tile_M=128, tile_N=128)
+    compiler = SimpleCompiler(model, rram, dram, tile_K=256, tile_M=128, tile_N=128)
     schedule = compiler.compile()
 
     # Simulate
     # sim = Simulator(model, schedule, rram, dram, cu, bits_per_element=16)
-    sim = Simulator(model, schedule, rram, dram, dram_cu, rram_cu, bits_per_element=16)
+    sim = Simulator(model, schedule, rram, dram, dram_cu, rram_cu)
 
     stats = sim.run()
 

@@ -4,9 +4,9 @@
   "tensors": [
     {"name": "tokens_pe",   "shape": [1296, 1024],         "bits": 16, "device": "rram", "layer": 5},
     {"name": "feat36x36",   "shape": [1024, 36, 36],      "bits": 16, "device": "rram", "layer": 5},
-    {"name": "W_pw1",       "shape": [2560, 1024, 1, 1],  "bits": 16,  "device": "rram", "layer": 5},
-    {"name": "W_pw2",       "shape": [2560, 2560, 1, 1],  "bits": 16,  "device": "rram", "layer": 5},
-    {"name": "W_dw",        "shape": [2560, 1, 3, 3],     "bits": 16,  "device": "rram", "layer": 5},
+    {"name": "W_pw1",       "shape": [2560, 1024, 1, 1],  "bits": 4,  "device": "rram", "layer": 5},
+    {"name": "W_pw2",       "shape": [2560, 2560, 1, 1],  "bits": 4,  "device": "rram", "layer": 5},
+    {"name": "W_dw",        "shape": [2560, 1, 3, 3],     "bits": 4,  "device": "rram", "layer": 5},
     {"name": "ldp_pw1",     "shape": [2560, 36, 36],      "bits": 16, "device": "rram", "layer": 5},
     {"name": "ldp_pw2",     "shape": [2560, 36, 36],      "bits": 16, "device": "rram", "layer": 5},
     {"name": "ldp_down",    "shape": [2560, 18, 18],      "bits": 16, "device": "rram", "layer": 5},
