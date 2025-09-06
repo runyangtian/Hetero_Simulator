@@ -1,0 +1,19 @@
+{"description": "Qwen2-0.5B single layer, 24 layers, 16 heads, 2048 dim, token_len=64+100=164 (Attn&weights&KV cache @DRAM, FFN@weights @RRAM)",
+
+"tensors": [
+    {"name": "W1_0",         "shape": [2048, 8192], "bits": 4,  "device":  "rram", "layer": 4},
+    {"name": "W2_0",         "shape": [8192, 2048], "bits": 4,  "device":  "rram", "layer": 4},
+    {"name": "attn_out",     "shape": [164, 2048], "bits": 16, "device":  "dram", "layer": 2},
+    {"name": "ff1",          "shape": [164, 8192], "bits": 16, "device":  "rram", "layer": 2},
+    {"name": "ff2",          "shape": [164, 2048], "bits": 16, "device":  "rram", "layer": 3}
+  ],
+
+  "ops": [  
+    {"type": "MatMul", "A": "attn_out", "B": "W1_0", "C": "ff1"},
+    {"type": "GeluOp", "A": "ff1", "C": "ff1"},
+    {"type": "MatMul", "A": "ff1", "B": "W2_0", "C": "ff2"},
+    {"type": "AddOp", "A": "ff2", "B": "attn_out", "C": "ff2"},
+    {"type": "LayerNorm", "A": "attn_out", "C": "attn_out"},
+    {"type": "UCIeOp", "size_bits": 5373952}
+  ]
+}

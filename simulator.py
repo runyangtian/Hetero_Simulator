@@ -115,9 +115,9 @@ class Simulator:
             # --- 汇总：读与算重叠，最后再写 ---
             # cycles = c_in + cc + cW
             # print(c_in, cc, cW)
-            reuse_ratio=0.4
-            cycles = max(c_in*(1-reuse_ratio), cc, cW*(1-reuse_ratio))
-            energy = eA*(1-reuse_ratio) + eB*(1-reuse_ratio) + ec + eW*(1-reuse_ratio)
+            
+            cycles = max(c_in, cc, cW)
+            energy = eA + eB + ec + eW
 
             bits_read = A_tile_bits + B_tile_bits
             bits_written = C_tile_bits
@@ -174,11 +174,11 @@ class Simulator:
             # === 写回输出 ===
             cOut, eOut = self._mem_write_cost(memO, out_bits, src_layer=layerO)
 
-            reuse_ratio=0.4
+            
             # === 汇总（读与算重叠，最后写）===
-            cycles = max(max(cWrd, cI)*(1-reuse_ratio), cc, cOut*(1-reuse_ratio))
+            cycles = max(max(cWrd, cI), cc, cOut)
             # cycles = max(cWrd, cI) + cc + cOut
-            energy = eWrd*(1-reuse_ratio) + eI*(1-reuse_ratio) + ec + eOut*(1-reuse_ratio)
+            energy = eWrd + eI + ec + eOut
             bits_read = weight_bits + img_bits
             bits_written = out_bits
 
@@ -196,12 +196,12 @@ class Simulator:
 
             # 近似计算量（交给 SFE/special function engine）
             macs = Cc * Ho * Wo * op.kh * op.kw
-            memO, layerO, _ = self._dev_and_layer(op.out_name)
+            memO, layerO, bpeO = self._dev_and_layer(op.out_name)
             cu_sel = self.dram_cu  # 池化通常走 DRAM 侧 SFE
             cc, ec = self._compute_cost_engine(macs, 'sfe', cu_sel)
 
             # 写回
-            out_bits = Cc * Ho * Wo * self.bpe_bits
+            out_bits = Cc * Ho * Wo * bpeO
             cOut, eOut = self._mem_write_cost(memO, out_bits, src_layer=layerO)
             cycles = cI + cc + cOut
             energy = eI + ec + eOut

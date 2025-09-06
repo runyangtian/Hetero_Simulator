@@ -46,17 +46,17 @@ def make_devices_and_cus():
 
     dram_cu = ComputeUnit(
         name='DRAM_CU',
-        macs_per_cycle=1024,            # 32 * 32
+        macs_per_cycle=32*32,        
         energy_per_mac_nj=0.000604,
-        sfe_ops_per_cycle=256*16,
+        sfe_ops_per_cycle=256,
         sfe_energy_per_op_nj=0.00005,
     )
 
     rram_cu = ComputeUnit(
         name='RRAM_CU',
-        macs_per_cycle=16384,           # 128 * 128 
+        macs_per_cycle=64*64,         
         energy_per_mac_nj=0.000604,
-        sfe_ops_per_cycle=256*16,      
+        sfe_ops_per_cycle=256,      
         sfe_energy_per_op_nj=0.00005, # 为了仿真给rram也加上SFE
     )
 
@@ -70,10 +70,10 @@ def run_one(json_path, freq_ghz=1.0, default_bits=16):
     loader = JSONModelLoader(default_bits=default_bits)
     model: Model = loader.build(spec)
 
-    compiler = SimpleCompiler(model, rram, dram, bits_per_element=default_bits, tile_K=128, tile_M=128, tile_N=128)
+    compiler = SimpleCompiler(model, rram, dram, tile_K=128, tile_M=128, tile_N=128)
     schedule = compiler.compile()
 
-    sim = Simulator(model, schedule, rram, dram, dram_cu, rram_cu, bits_per_element=default_bits)
+    sim = Simulator(model, schedule, rram, dram, dram_cu, rram_cu)
     stats = sim.run()
 
     return {
@@ -122,9 +122,9 @@ def pct(x, total):
 
 def main():
     ap = argparse.ArgumentParser(description="Batch-run, expand encoder/decoder layers, and aggregate.")
-    ap.add_argument("--model-dir", default="./mobileVLMv2_1.7B_336")
+    ap.add_argument("--model-dir", default="")
     ap.add_argument("--enc-layers", type=int, default=24, help="encoder_attention/ffn 的层数")
-    ap.add_argument("--dec-layers", type=int, default=24, help="decoder_attention/ffn 的层数")
+    ap.add_argument("--dec-layers", type=int, default=24, help="decoder_attention/ffn 的层数, mobilevlm 1.7B 24layers, 3B 32 layers, fastvlm 0.6B 24layers, 1.7B 28layers")
     ap.add_argument("--stage4_layers", type=int, default=4, help="fastvlm stage4 的层数")
     ap.add_argument("--freq-ghz", type=float, default=1.0)
     args = ap.parse_args()

@@ -12,7 +12,7 @@ from simulator import Simulator
 
 def main():
     parser = argparse.ArgumentParser(description='3D Hybrid Memory Simulator (JSON-driven)')
-    parser.add_argument('--json', type=str, default='./model_json/patch_embed.json', help='Path to JSON model spec')
+    parser.add_argument('--json', type=str, default='', help='Path to JSON model spec')
     args = parser.parse_args()
 
     # Device parameters
@@ -31,8 +31,8 @@ def main():
     rram = MemoryDevice(
         name='3D_RRAM',
         capacity_bits = int(2*1024*1024*1024*8),        # 2GB
-        read_bw_bits_per_cycle  = 8192,
-        write_bw_bits_per_cycle = 8192,
+        read_bw_bits_per_cycle  = 4096,
+        write_bw_bits_per_cycle = 4096,
         read_energy_per_bit  = 0.0004,          # nJ/bit
         write_energy_per_bit = 0.00133,         # nJ/bit
         read_latency_cycles = 3,
@@ -41,20 +41,19 @@ def main():
 
     dram_cu = ComputeUnit(
         name='DRAM_CU',
-        macs_per_cycle=1024,
+        macs_per_cycle=32*32,
         energy_per_mac_nj=0.000604,
-        sfe_ops_per_cycle=256*16,
+        sfe_ops_per_cycle=256,
         sfe_energy_per_op_nj=0.00005,
     )
 
     rram_cu = ComputeUnit(
         name='RRAM_CU',
-        macs_per_cycle=65536,                             #16384,
+        macs_per_cycle=64*64,
         energy_per_mac_nj=0.000604,
-        sfe_ops_per_cycle=256*16,      
+        sfe_ops_per_cycle=256,      
         sfe_energy_per_op_nj=0.00005, # 为了仿真给rram也加上SFE
     )
-
 
     # Load model
     if args.json:
@@ -66,7 +65,7 @@ def main():
         print("No JSON file provided.")
 
     # Compile
-    compiler = SimpleCompiler(model, rram, dram, tile_K=256, tile_M=128, tile_N=128)
+    compiler = SimpleCompiler(model, rram, dram, tile_K=128, tile_M=128, tile_N=128)
     schedule = compiler.compile()
 
     # Simulate

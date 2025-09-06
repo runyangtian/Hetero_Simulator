@@ -1,0 +1,19 @@
+{"description": "MobileLLama1.4B single layer, 24 layers, 16 heads, 2048 dim, token_len=324+4100=4424, (Attn&weights&KV cache @DRAM, FFN@weights @RRAM)",
+
+"tensors": [
+    {"name": "W1_0",         "shape": [2048, 8192], "bits": 4,  "device":  "rram", "layer": 4},
+    {"name": "W2_0",         "shape": [8192, 2048], "bits": 4,  "device":  "rram", "layer": 4},
+    {"name": "attn_out",     "shape": [4424, 2048], "bits": 16, "device":  "dram", "layer": 2},
+    {"name": "ff1",          "shape": [4424, 8192], "bits": 16, "device":  "rram", "layer": 2},
+    {"name": "ff2",          "shape": [4424, 2048], "bits": 16, "device":  "rram", "layer": 3}
+  ],
+
+  "ops": [  
+    {"type": "MatMul", "A": "attn_out", "B": "W1_0", "C": "ff1"},
+    {"type": "GeluOp", "A": "ff1", "C": "ff1"},
+    {"type": "MatMul", "A": "ff1", "B": "W2_0", "C": "ff2"},
+    {"type": "AddOp", "A": "ff2", "B": "attn_out", "C": "ff2"},
+    {"type": "LayerNorm", "A": "ff2", "C": "ff2"},
+    {"type": "UCIeOp", "size_bits": 144965632}
+  ]
+}
