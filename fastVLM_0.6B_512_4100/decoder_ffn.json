@@ -1,4 +1,4 @@
-{"description": "Qwen2-0.5B single layer, 24 layers, 16 heads, 2048 dim, token_len=64+100=4160 (Attn&weights&KV cache @DRAM, FFN@weights @RRAM)",
+{"description": "Qwen2-0.5B single layer, 24 layers, 16 heads, 2048 dim, token_len=64+4100=4160 (Attn&weights&KV cache @DRAM, FFN@weights @RRAM)",
 
 "tensors": [
     {"name": "W1_0",         "shape": [2048, 8192], "bits": 4,  "device":  "rram", "layer": 4},
