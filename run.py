@@ -12,13 +12,13 @@ from loader import JSONModelLoader
 from compiler import SimpleCompiler
 from simulator import Simulator
 
-# stage_output_path = "./result/stages_summary_mobilevlm.csv"
-# ops_output_path = "./result/ops_summary_mobilevlm.csv"
-# total_output_path = "./result/totals_mobilevlm.txt"
+stage_output_path = "./result/stages_summary_mobilevlm.csv"
+ops_output_path = "./result/ops_summary_mobilevlm.csv"
+total_output_path = "./result/totals_mobilevlm.txt"
 
-stage_output_path = "./result/stages_summary_fastvlm.csv"
-ops_output_path = "./result/ops_summary_fastvlm.csv"
-total_output_path = "./result/totals_fastvlm.txt"
+# stage_output_path = "./result/stages_summary_fastvlm.csv"
+# ops_output_path = "./result/ops_summary_fastvlm.csv"
+# total_output_path = "./result/totals_fastvlm.txt"
 
 # —— 设备 & CU：保持与 main.py 一致 ——
 def make_devices_and_cus():
@@ -74,6 +74,8 @@ def run_one(json_path, freq_ghz=1.0, default_bits=16):
     schedule = compiler.compile()
 
     sim = Simulator(model, schedule, rram, dram, dram_cu, rram_cu)
+    # sim = Simulator(model, schedule, dram, dram, dram_cu, dram_cu)
+
     stats = sim.run()
 
     return {
@@ -129,41 +131,41 @@ def main():
     ap.add_argument("--freq-ghz", type=float, default=1.0)
     args = ap.parse_args()
 
-    # # 固定顺序 mobilevlm
-    # stages = [
-    #     "patch_embed_B.json",
-    #     "encoder_attention_B.json",
-    #     "encoder_ffn_B.json",
-    #     "connector_B.json",
-    #     "decoder_attention_B.json",
-    #     "decoder_ffn_B.json",
-    # ]
-
-    # # 层数放大（其余默认 1）
-    # multipliers = {
-    #     "encoder_attention_B.json": args.enc_layers,
-    #     "encoder_ffn_B.json": args.enc_layers,
-    #     "decoder_attention_B.json": args.dec_layers,
-    #     "decoder_ffn_B.json": args.dec_layers,
-    # }
-
-    # 固定顺序 fastvlm
+    # 固定顺序 mobilevlm
     stages = [
-        "stem_stage123.json",
-        "stage4.json",
-        "patch_embed_4_5.json",
-        "stage5.json",
-        "connector.json",
-        "decoder_attention.json",
-        "decoder_ffn.json",
+        "patch_embed_B.json",
+        "encoder_attention_B.json",
+        "encoder_ffn_B.json",
+        "connector_B.json",
+        "decoder_attention_B.json",
+        "decoder_ffn_B.json",
     ]
 
     # 层数放大（其余默认 1）
     multipliers = {
-        "stage4.json": args.stage4_layers,
-        "decoder_attention.json": args.dec_layers,
-        "decoder_ffn.json": args.dec_layers,
+        "encoder_attention_B.json": args.enc_layers,
+        "encoder_ffn_B.json": args.enc_layers,
+        "decoder_attention_B.json": args.dec_layers,
+        "decoder_ffn_B.json": args.dec_layers,
     }
+
+    # # 固定顺序 fastvlm
+    # stages = [
+    #     "stem_stage123.json",
+    #     "stage4.json",
+    #     "patch_embed_4_5.json",
+    #     "stage5.json",
+    #     "connector.json",
+    #     "decoder_attention.json",
+    #     "decoder_ffn.json",
+    # ]
+
+    # # 层数放大（其余默认 1）
+    # multipliers = {
+    #     "stage4.json": args.stage4_layers,
+    #     "decoder_attention.json": args.dec_layers,
+    #     "decoder_ffn.json": args.dec_layers,
+    # }
 
     # —— 跑每个环节，按层数放大，保存“环节级”结果（用于环节占比）
     stage_results = {}

@@ -23,8 +23,8 @@ class Simulator:
 
         self.stats = Stats()
         # self.bpe_bits = bits_per_element
-        self.ucie_bandwidth = 2048      # 32 Gb/s × 64 = 2,048 Gb/s；1 GHz → 2,048 Gb/s ÷ 1e9 = 2,048 bit/cycle，全双工则*2
-        self.ucie_energy_per_bit = 0.5  # pJ/bit
+        self.ucie_bandwidth = 2048 #float("inf")      # 32 Gb/s × 64 = 2,048 Gb/s；1 GHz → 2,048 Gb/s ÷ 1e9 = 2,048 bit/cycle，全双工则*2 
+        self.ucie_energy_per_bit = 0.5 #0   # pJ/bit
         self.layer_latency_max_cycles = 3 # 0.01ns/layer, 256 layer in total
 
 

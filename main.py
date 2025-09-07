@@ -71,6 +71,7 @@ def main():
     # Simulate
     # sim = Simulator(model, schedule, rram, dram, cu, bits_per_element=16)
     sim = Simulator(model, schedule, rram, dram, dram_cu, rram_cu)
+    # sim = Simulator(model, schedule, dram, dram, dram_cu, dram_cu)
 
     stats = sim.run()
 
