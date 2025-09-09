@@ -69,7 +69,6 @@ def main():
     schedule = compiler.compile()
 
     # Simulate
-    # sim = Simulator(model, schedule, rram, dram, cu, bits_per_element=16)
     sim = Simulator(model, schedule, rram, dram, dram_cu, rram_cu)
     # sim = Simulator(model, schedule, dram, dram, dram_cu, dram_cu)
 
@@ -98,6 +97,25 @@ def main():
     print('\nCycle Breakdown:')
     for k,v in stats.cycles_breakdown.items():
         print(f'  {k}: {v}')
+    
+    # ===== 新增打印：细分的 cycle breakdown =====
+    print('\nDetailed Cycle Breakdown:')
+    print(f'  DRAM Read cycles:   {stats.cycles_read_dram}')
+    print(f'  DRAM Compute cycles:{stats.cycles_comp_dram}')
+    print(f'  DRAM Write cycles:  {stats.cycles_write_dram}')
+    print(f'  RRAM Read cycles:   {stats.cycles_read_rram}')
+    print(f'  RRAM Compute cycles:{stats.cycles_comp_rram}')
+    print(f'  RRAM Write cycles:  {stats.cycles_write_rram}')
+
+    # ===== 新增打印：细分的 energy breakdown =====
+    print('\nDetailed Energy Breakdown (nJ):')
+    print(f'  DRAM Read energy:   {stats.energy_read_dram_nj:.2f}')
+    print(f'  DRAM Compute energy:{stats.energy_comp_dram_nj:.2f}')
+    print(f'  DRAM Write energy:  {stats.energy_write_dram_nj:.2f}')
+    print(f'  RRAM Read energy:   {stats.energy_read_rram_nj:.2f}')
+    print(f'  RRAM Compute energy:{stats.energy_comp_rram_nj:.2f}')
+    print(f'  RRAM Write energy:  {stats.energy_write_rram_nj:.2f}')
+
 
 
 if __name__ == '__main__':

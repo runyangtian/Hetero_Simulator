@@ -16,17 +16,39 @@ class Simulator:
         self.model = model
         self.schedule = schedule
         self.rram, self.dram = rram, dram
-
-        # self.cu = cu
         self.dram_cu = dram_cu
         self.rram_cu = rram_cu
-
         self.stats = Stats()
-        # self.bpe_bits = bits_per_element
-        self.ucie_bandwidth = 2048 #float("inf")      # 32 Gb/s × 64 = 2,048 Gb/s；1 GHz → 2,048 Gb/s ÷ 1e9 = 2,048 bit/cycle，全双工则*2 
-        self.ucie_energy_per_bit = 0.5 #0   # pJ/bit
+        self.ucie_bandwidth = 2048      # 32 Gb/s × 64 = 2,048 Gb/s；1 GHz → 2,048 Gb/s ÷ 1e9 = 2,048 bit/cycle，全双工则*2 
+        # self.ucie_bandwidth = float("inf")
+        self.ucie_energy_per_bit = 0.5  # pJ/bit
+        # self.ucie_energy_per_bit = 0
         self.layer_latency_max_cycles = 3 # 0.01ns/layer, 256 layer in total
+    
+    # ===== 新增：把一次读/写/算的组件时间/能量，归入 DRAM / RRAM 的对应桶 =====
+    def _acc_rw(self, dev: MemoryDevice, cycles: int, energy_nj: float, is_read: bool):
+        if dev is self.dram:
+            if is_read:
+                self.stats.cycles_read_dram += cycles
+                self.stats.energy_read_dram_nj += energy_nj
+            else:
+                self.stats.cycles_write_dram += cycles
+                self.stats.energy_write_dram_nj += energy_nj
+        elif dev is self.rram:
+            if is_read:
+                self.stats.cycles_read_rram += cycles
+                self.stats.energy_read_rram_nj += energy_nj
+            else:
+                self.stats.cycles_write_rram += cycles
+                self.stats.energy_write_rram_nj += energy_nj
 
+    def _acc_comp(self, cu: ComputeUnit, cycles: int, energy_nj: float):
+        if cu is self.dram_cu:
+            self.stats.cycles_comp_dram += cycles
+            self.stats.energy_comp_dram_nj += energy_nj
+        elif cu is self.rram_cu:
+            self.stats.cycles_comp_rram += cycles
+            self.stats.energy_comp_rram_nj += energy_nj
 
     def _mem_read_cost(self, dev: MemoryDevice, size_bits: int, src_layer: int = -1):
         bw_cycles = math.ceil(size_bits / dev.read_bw_bits_per_cycle) if dev.read_bw_bits_per_cycle > 0 else 0
@@ -35,10 +57,10 @@ class Simulator:
 
         hops = dev.tsv_hops(src_layer)
         tsv_cycles = dev.tsv_cycles_for(size_bits, hops)
-        if tsv_cycles == 0:
-            return 0, 0
+        if hops==0:
+            return 0, 0.0
         else:
-            return cycles + tsv_cycles, energy  # 这里先只加延迟；能量如需可扩展
+            return cycles + tsv_cycles, energy
 
     def _mem_write_cost(self, dev: MemoryDevice, size_bits: int, src_layer: int = -1):
         bw_cycles = math.ceil(size_bits / dev.write_bw_bits_per_cycle) if dev.write_bw_bits_per_cycle > 0 else 0
@@ -47,8 +69,8 @@ class Simulator:
 
         hops = dev.tsv_hops(src_layer)
         tsv_cycles = dev.tsv_cycles_for(size_bits, hops)
-        if tsv_cycles == 0:
-            return 0, 0
+        if hops==0:
+            return 0, 0.0
         else:
             return cycles + tsv_cycles, energy
 
@@ -57,12 +79,10 @@ class Simulator:
             return 0, 0.0
 
         if engine == 'sfe':
-            tput = cu.sfe_ops_per_cycle
-            cycles = (amount_ops + tput - 1) // tput
+            cycles = (amount_ops + cu.sfe_ops_per_cycle - 1) // cu.sfe_ops_per_cycle
             energy = amount_ops * cu.sfe_energy_per_op_nj
-        else:  # 'mac'``
-            tput = max(1, cu.macs_per_cycle)
-            cycles = (amount_ops + tput - 1) // tput
+        else:  # 'mac'
+            cycles = (amount_ops + cu.macs_per_cycle - 1) // cu.macs_per_cycle
             energy = amount_ops * cu.energy_per_mac_nj
 
         return cycles, energy
@@ -102,19 +122,17 @@ class Simulator:
 
             # --- 计算吞吐（近似）---
             macs = m * n * k
-            # 用你的引擎计算能量，但忽略它返回的周期（我们自己算周期）
-            _, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
 
-            # 计算周期 ≈ 吞吐周期 + 一条波的填/排空
-            cc_tput = (macs + cu_sel.macs_per_cycle - 1) // cu_sel.macs_per_cycle
-            cc = cc_tput #+ wave_ovhd
+            # 用引擎计算能量，周期
+            cc, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
 
             # --- 写回 C ---
             cW, eW = self._mem_write_cost(memC, C_tile_bits, src_layer=layerC)
 
-            # --- 汇总：读与算重叠，最后再写 ---
-            # cycles = c_in + cc + cW
-            # print(c_in, cc, cW)
+            self._acc_rw(memA, c_in, eA, is_read=True)
+            self._acc_rw(memB, 0, eB, is_read=True)
+            self._acc_comp(cu_sel, cc, ec)
+            self._acc_rw(memC, cW, eW, is_read=False)
             
             cycles = max(c_in, cc, cW)
             energy = eA + eB + ec + eW
@@ -127,23 +145,25 @@ class Simulator:
             C_in, H, W = self.model.shapes[op.input_img].dims
             wshape = self.model.shapes[op.weight_name].dims  # [Cpatch, Cout] 或 [Cout, Cin/groups, Kh, Kw]
 
-            # === 读权重 ===
-            memW, layerW, weight_bits = self._dev_and_layer(op.weight_name)
-            cWrd, eWrd = self._mem_read_cost(memW, weight_bits, src_layer=layerW)
-
             # === 读输入 ===
-            memI, layerI, img_bits = self._dev_and_layer(op.input_img)
-            cI, eI = self._mem_read_cost(memI, img_bits, src_layer=layerI)
+            memI, layerI, bpeI = self._dev_and_layer(op.input_img)
+            memO, layerO, bpeO = self._dev_and_layer(op.out_name)
+
+            img_bits_total = C_in * H * W * bpeI
+            cI, eI = self._mem_read_cost(memI, img_bits_total, src_layer=layerI)
+
+            # === 读权重 ===
+            memW, layerW, bpeW = self._dev_and_layer(op.weight_name)
 
             # === 输出空间尺寸 ===
             Ho = (H + 2*op.ph - op.kh) // op.sh + 1
             Wo = (W + 2*op.pw - op.kw) // op.sw + 1
 
-            memO, layerO, bpeO = self._dev_and_layer(op.out_name)
             # === GEMM 等价尺寸 + MACs / out_bits ===
             if len(wshape) == 2:
                 # Patch-Embed: [Cpatch, Cout]
                 Cpatch, Cout = wshape[0], wshape[1]
+                weight_bits_total = Cpatch * Cout * bpeW
                 m = Ho * Wo
                 k = Cpatch
                 n = Cout
@@ -155,31 +175,27 @@ class Simulator:
                 Cin_per_g = C_in // max(1, op.groups)
                 m = Ho * Wo
                 k = Cin_per_g * op.kh * op.kw
+                weight_bits_total = Cout * k * bpeW
                 n = Cout
                 macs = m * k * n
                 out_bits = m * n * bpeO
 
-            # === 选择 CU：按输出张量所在 device（与你原逻辑保持一致）===
-            
+            cWrd, eWrd = self._mem_read_cost(memW, weight_bits_total, src_layer=layerW)
+            c_in = max(cWrd, cI) 
             cu_sel = self.rram_cu if (memO is self.rram) else self.dram_cu
-
-            # 吞吐周期（近似）+ 一条波填/排空
-            cc_tput = (macs + cu_sel.macs_per_cycle - 1) // cu_sel.macs_per_cycle
-            # wave_ovhd = self._tile_wave_overhead(cu_sel, m, n)
-            cc = cc_tput #+ wave_ovhd
-
-            # 计算能量（保持你原接口；周期我们用上面的 cc）
-            _, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
-
-            # === 写回输出 ===
+            cc, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
             cOut, eOut = self._mem_write_cost(memO, out_bits, src_layer=layerO)
-
+            
+            # print(c_in, cc, cOut)
+            self._acc_rw(memI, c_in, eI, is_read=True)
+            self._acc_rw(memW, 0, eWrd, is_read=True)
+            self._acc_comp(cu_sel, cc, ec)
+            self._acc_rw(memO, cOut, eOut, is_read=False)
             
             # === 汇总（读与算重叠，最后写）===
-            cycles = max(max(cWrd, cI), cc, cOut)
-            # cycles = max(cWrd, cI) + cc + cOut
+            cycles = max(c_in, cc, cOut)
             energy = eWrd + eI + ec + eOut
-            bits_read = weight_bits + img_bits
+            bits_read = weight_bits_total + img_bits_total
             bits_written = out_bits
 
         elif ttype == 'avgpool2d':
@@ -187,63 +203,121 @@ class Simulator:
             Cc, H, W = self.model.shapes[op.input_img].dims
 
             # 输入读取
-            memI, layerI, img_bits = self._dev_and_layer(op.input_img)
-            cI, eI = self._mem_read_cost(memI, img_bits, src_layer=layerI)
+            memI, layerI, bpeI = self._dev_and_layer(op.input_img)
+            img_bits_total = Cc * H * W * bpeI
+            cI, eI = self._mem_read_cost(memI, img_bits_total, src_layer=layerI)
 
             # 输出尺寸
             Ho = (H + 2*op.ph - op.kh) // op.sh + 1
             Wo = (W + 2*op.pw - op.kw) // op.sw + 1
-
-            # 近似计算量（交给 SFE/special function engine）
             macs = Cc * Ho * Wo * op.kh * op.kw
+
             memO, layerO, bpeO = self._dev_and_layer(op.out_name)
-            cu_sel = self.dram_cu  # 池化通常走 DRAM 侧 SFE
+            cu_sel = self.rram_cu if (memO is self.rram) else self.dram_cu
             cc, ec = self._compute_cost_engine(macs, 'sfe', cu_sel)
 
             # 写回
             out_bits = Cc * Ho * Wo * bpeO
             cOut, eOut = self._mem_write_cost(memO, out_bits, src_layer=layerO)
-            cycles = cI + cc + cOut
+
+            self._acc_rw(memI, cI, eI, is_read=True)
+            self._acc_comp(cu_sel, cc, ec)
+            self._acc_rw(memO, cOut, eOut, is_read=False)
+            cycles = max(cI, cc, cOut)
             energy = eI + ec + eOut
-            bits_read, bits_written = img_bits, out_bits
+            bits_read, bits_written = img_bits_total, out_bits
 
         elif ttype in ('softmaxop', 'geluop', 'reluop', 'sigmoidop', 'tanhop', 'layernorm'):
             macs = op.flops(self.model.shapes)
             # === A 的读、C 的写都带 device+layer ===
-            memA, layerA, a_bits = self._dev_and_layer(op.A)
-            memC, layerC, c_bits = self._dev_and_layer(op.C)
+            memA, layerA, bpeA = self._dev_and_layer(op.A)
+            memC, layerC, bpeC = self._dev_and_layer(op.C)
+           
+            wshapeA = self.model.shapes[op.A].dims
+            wshapeC = self.model.shapes[op.C].dims
+
+            if len(wshapeA)==2:
+                a_bits_total = wshapeA[0] * wshapeA[1] * bpeA 
+            elif len(wshapeA)==3:
+                a_bits_total = wshapeA[0] * wshapeA[1] * wshapeA[2] * bpeA
+            else:
+                raise ValueError(f"fix the code in simulator for A, dims={wshapeA}")
+
+            if len(wshapeC)==2:
+                c_bits_total = wshapeC[0] * wshapeC[1] * bpeC
+            elif len(wshapeC)==3: 
+                c_bits_total = wshapeC[0] * wshapeC[1] * wshapeC[2] * bpeC
+            else:
+                raise ValueError(f"fix the code in simulator for C, dims={wshapeC}")
+
             cu_sel = self.rram_cu if (memC is self.rram) else self.dram_cu
             cc, ec = self._compute_cost_engine(macs, 'sfe', cu_sel)
-            rc, re = self._mem_read_cost(memA, a_bits, src_layer=layerA)
-            wc, we = self._mem_write_cost(memC, c_bits, src_layer=layerC)
+            rc, re = self._mem_read_cost(memA, a_bits_total, src_layer=layerA)
+            wc, we = self._mem_write_cost(memC, c_bits_total, src_layer=layerC)
 
-            cycles = max(rc, cc) + wc
+            self._acc_rw(memA, rc, re, is_read=True)
+            self._acc_comp(cu_sel, cc, ec)
+            self._acc_rw(memC, wc, we, is_read=False)
+
+            cycles = max(rc, cc, wc)
             energy = re + ec + we
-            bits_read, bits_written = a_bits, c_bits
+            bits_read, bits_written = a_bits_total, c_bits_total
 
         elif ttype in ('addop', 'subop', 'mulop', 'divop'):
             macs = op.flops(self.model.shapes)
-            # cc, ec = self._compute_cost(macs)
-            cc, ec = self._compute_cost_engine(macs, 'mac', self.dram_cu)
 
-            memA, layerA, a_bits = self._dev_and_layer(op.A)
-            memB, layerB, b_bits = self._dev_and_layer(op.B)
-            memC, layerC, c_bits = self._dev_and_layer(op.C)
+            memA, layerA, bpeA = self._dev_and_layer(op.A)
+            memB, layerB, bpeB = self._dev_and_layer(op.B)
+            memC, layerC, bpeC = self._dev_and_layer(op.C)
 
-            rcA, reA = self._mem_read_cost(memA, a_bits, src_layer=layerA)
-            rcB, reB = self._mem_read_cost(memB, b_bits, src_layer=layerB)
-            wc, we  = self._mem_write_cost(memC, c_bits, src_layer=layerC)
+            wshapeA = self.model.shapes[op.A].dims
+            wshapeB = self.model.shapes[op.B].dims
+            wshapeC = self.model.shapes[op.C].dims
 
-            cycles = max(rcA + rcB, cc) + wc
+            if len(wshapeA) == 2:
+                a_bits_total = wshapeA[0] * wshapeA[1] * bpeA
+            elif len(wshapeA) == 3:
+                a_bits_total = wshapeA[0] * wshapeA[1] * wshapeA[2] * bpeA
+            else:
+                raise ValueError(f"fix the code in simulator for A, dims={wshapeA}")
+
+            if len(wshapeB) == 2:
+                b_bits_total = wshapeB[0] * wshapeB[1] * bpeB
+            elif len(wshapeB) == 3:
+                b_bits_total = wshapeB[0] * wshapeB[1] * wshapeB[2] * bpeB
+            else:
+                raise ValueError(f"fix the code in simulator for B, dims={wshapeB}")
+
+            if len(wshapeC) == 2:
+                c_bits_total = wshapeC[0] * wshapeC[1] * bpeC
+            elif len(wshapeC) == 3:
+                c_bits_total = wshapeC[0] * wshapeC[1] * wshapeC[2] * bpeC
+            else:
+                raise ValueError(f"fix the code in simulator for C, dims={wshapeC}")
+
+            cu_sel = self.rram_cu if (memC is self.rram) else self.dram_cu
+            cc, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
+
+            rcA, reA = self._mem_read_cost(memA, a_bits_total, src_layer=layerA)
+            rcB, reB = self._mem_read_cost(memB, b_bits_total, src_layer=layerB)
+            wc, we  = self._mem_write_cost(memC, c_bits_total, src_layer=layerC)
+            c_in = max(rcA, rcB)
+
+            self._acc_rw(memA, c_in, reA, is_read=True)
+            self._acc_rw(memB, 0, reB, is_read=True)
+            self._acc_comp(cu_sel, cc, ec)
+            self._acc_rw(memC, wc, we, is_read=False)
+
+            cycles = max(c_in, cc, wc)
             energy = reA + reB + ec + we
-            bits_read = a_bits + b_bits
-            bits_written = c_bits
+            bits_read = a_bits_total + b_bits_total
+            bits_written = c_bits_total
 
         elif ttype == 'ucieop':
             op = item['op']
-            cycles = op.size_bits // self.ucie_bandwidth
-            energy = op.size_bits * self.ucie_energy_per_bit * 1e-3  # nJ
-
+            cycles = math.ceil(op.size_bits / max(1, self.ucie_bandwidth))  # 用 ceil 避免被截断为 0
+            energy = op.size_bits * self.ucie_energy_per_bit * 1e-3         # pJ → nJ
+            
         else:
             raise ValueError(f"Unknown ttype '{ttype}' in schedule item: {item}")
 

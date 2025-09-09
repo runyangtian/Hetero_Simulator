@@ -1,11 +1,11 @@
 {"description": "Qwen2-0.5B single layer, 24 layers, 16 heads, 2048 dim, token_len=64+1100=1164 (Attn&weights&KV cache @DRAM, FFN@weights @RRAM)",
 
 "tensors": [
-    {"name": "W1_0",         "shape": [2048, 8192], "bits": 4,  "device":  "rram", "layer": 4},
-    {"name": "W2_0",         "shape": [8192, 2048], "bits": 4,  "device":  "rram", "layer": 4},
-    {"name": "attn_out",     "shape": [1164, 2048], "bits": 16, "device":  "dram", "layer": 2},
-    {"name": "ff1",          "shape": [1164, 8192], "bits": 16, "device":  "rram", "layer": 2},
-    {"name": "ff2",          "shape": [1164, 2048], "bits": 16, "device":  "rram", "layer": 3}
+    {"name": "W1_0",         "shape": [2048, 8192], "bits": 4,  "device":  "rram", "layer": 1},
+    {"name": "W2_0",         "shape": [8192, 2048], "bits": 4,  "device":  "rram", "layer": 1},
+    {"name": "attn_out",     "shape": [1164, 2048], "bits": 16, "device":  "dram", "layer": 0},
+    {"name": "ff1",          "shape": [1164, 8192], "bits": 16, "device":  "rram", "layer": 0},
+    {"name": "ff2",          "shape": [1164, 2048], "bits": 16, "device":  "rram", "layer": 0}
   ],
 
   "ops": [  

@@ -1,5 +1,21 @@
 ==== TOTALS (after layer expansion) ====
-cycles: 301337343.0
-macs:   403422810880
-energy: 293012799.218959 nJ  (0.293012799 J)
-time@1.0GHz: 0.301337 s
+cycles: 2461396839
+macs:   11706158170880
+energy: 8067207956.040108 nJ  (8.067207956 J)
+time@1.0GHz: 2.461397 s
+
+==== Detailed Cycle Breakdown ====
+cycles_read_dram:    910879157
+cycles_comp_dram:    5485601576
+cycles_write_dram:   867923978
+cycles_read_rram:    35638279
+cycles_comp_rram:    1502668484
+cycles_write_rram:   186215
+
+==== Detailed Energy Breakdown (nJ) ====
+energy_read_dram:    549602618.546119
+energy_comp_dram:    3369007356.675998
+energy_write_dram:   370786414.681424
+energy_read_rram:    77789134.847917
+energy_comp_rram:    3694612542.633948
+energy_write_rram:   631495.065600

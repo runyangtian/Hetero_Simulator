@@ -111,3 +111,17 @@ class Stats:
     breakdown: Dict[str, float] = field(default_factory=dict)
     macs_breakdown: Dict[str, int] = field(default_factory=dict) 
     cycles_breakdown: Dict[str, int] = field(default_factory=dict) 
+
+    cycles_read_dram = 0
+    cycles_write_dram = 0
+    cycles_comp_dram = 0
+    cycles_read_rram = 0
+    cycles_write_rram = 0
+    cycles_comp_rram = 0
+
+    energy_read_dram_nj = 0.0
+    energy_write_dram_nj = 0.0
+    energy_comp_dram_nj = 0.0
+    energy_read_rram_nj = 0.0
+    energy_write_rram_nj = 0.0
+    energy_comp_rram_nj = 0.0

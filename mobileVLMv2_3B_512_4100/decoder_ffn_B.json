@@ -2,11 +2,11 @@
   "description": "MobileLLama2.7B single layer, 32 layers, 32 heads, 2560 dim, token_len=324+4100=4424, (Attn&weights&KV cache @DRAM, FFN@weights @RRAM)",
 
   "tensors": [
-    {"name": "W1_0",         "shape": [2560, 10240], "bits": 4, "device": "rram", "layer": 4},
-    {"name": "W2_0",         "shape": [10240, 2560], "bits": 4, "device": "rram", "layer": 4},
-    {"name": "attn_out",     "shape": [4424, 2560],  "bits": 16, "device": "dram", "layer": 2},
-    {"name": "ff1",          "shape": [4424, 10240], "bits": 16, "device": "rram", "layer": 2},
-    {"name": "ff2",          "shape": [4424, 2560],  "bits": 16, "device": "rram", "layer": 3}
+    {"name": "W1_0",         "shape": [2560, 10240], "bits": 4, "device": "rram", "layer": 1},
+    {"name": "W2_0",         "shape": [10240, 2560], "bits": 4, "device": "rram", "layer": 1},
+    {"name": "attn_out",     "shape": [4424, 2560],  "bits": 16, "device": "dram", "layer": 0},
+    {"name": "ff1",          "shape": [4424, 10240], "bits": 16, "device": "rram", "layer": 0},
+    {"name": "ff2",          "shape": [4424, 2560],  "bits": 16, "device": "rram", "layer": 0}
   ],
 
   "ops": [

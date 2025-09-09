@@ -2,11 +2,11 @@
   "description": "ViT encoder single layer (ViT-L 24 layers, 16 heads, 1024 emb_dim) (Attn&weights @DRAM, FFN&weights @RRAM)",
   
   "tensors": [
-    {"name": "W1_0",  "shape": [1024, 4096], "bits": 4, "device": "rram", "layer": 4},
-    {"name": "W2_0",  "shape": [4096, 1024], "bits": 4, "device": "rram", "layer": 4},
-    {"name": "ff1",   "shape": [1296, 4096], "bits": 16, "device": "rram", "layer": 2},
-    {"name": "attn_out", "shape": [1296, 1024], "bits": 16, "device": "rram", "layer": 2},
-    {"name": "ff2",   "shape": [1296, 1024], "bits": 16, "device": "rram", "layer": 3}
+    {"name": "W1_0",  "shape": [1024, 4096], "bits": 4, "device": "rram", "layer": 1},
+    {"name": "W2_0",  "shape": [4096, 1024], "bits": 4, "device": "rram", "layer": 1},
+    {"name": "ff1",   "shape": [1296, 4096], "bits": 16, "device": "rram", "layer": 0},
+    {"name": "attn_out", "shape": [1296, 1024], "bits": 16, "device": "rram", "layer": 0},
+    {"name": "ff2",   "shape": [1296, 1024], "bits": 16, "device": "rram", "layer": 0}
   ],
 
   "ops": [
