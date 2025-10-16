@@ -1,5 +1,5 @@
 # analyze_pipeline.py
-# 依次跑 6 个 *_A.json，按层数放大 encoder/decoder 两组，输出环节&算子两层统计 + 总量
+# run all .json，amplify encoder/decoder (* depth)
 
 import os
 import json
@@ -12,15 +12,15 @@ from loader import JSONModelLoader
 from compiler import SimpleCompiler
 from simulator import Simulator
 
-# stage_output_path = "./result/stages_summary_mobilevlm.csv"
-# ops_output_path = "./result/ops_summary_mobilevlm.csv"
-# total_output_path = "./result/totals_mobilevlm.txt"
+stage_output_path = "./result/stages_summary_mobilevlm.csv"
+ops_output_path = "./result/ops_summary_mobilevlm.csv"
+total_output_path = "./result/totals_mobilevlm.txt"
 
-stage_output_path = "./result/stages_summary_fastvlm.csv"
-ops_output_path = "./result/ops_summary_fastvlm.csv"
-total_output_path = "./result/totals_fastvlm.txt"
+# stage_output_path = "./result/stages_summary_fastvlm.csv"
+# ops_output_path = "./result/ops_summary_fastvlm.csv"
+# total_output_path = "./result/totals_fastvlm.txt"
 
-# —— 设备 & CU：保持与 main.py 一致 ——
+# device & CU：same with main.py
 def make_devices_and_cus():
     dram = MemoryDevice(
         name='3D_DRAM',
@@ -187,43 +187,43 @@ def main():
     ap.add_argument("--freq-ghz", type=float, default=1.0)
     args = ap.parse_args()
 
-    # # 固定顺序 mobilevlm
-    # stages = [
-    #     "patch_embed_B.json",
-    #     "encoder_attention_B.json",
-    #     "encoder_ffn_B.json",
-    #     "connector_B.json",
-    #     "decoder_attention_B.json",
-    #     "decoder_ffn_B.json",
-    # ]
-
-    # # 层数放大（其余默认 1）
-    # multipliers = {
-    #     "encoder_attention_B.json": args.enc_layers,
-    #     "encoder_ffn_B.json": args.enc_layers,
-    #     "decoder_attention_B.json": args.dec_layers,
-    #     "decoder_ffn_B.json": args.dec_layers,
-    # }
-
-    # 固定顺序 fastvlm
+    # mobilevlm
     stages = [
-        "stem_stage123.json",
-        "stage4.json",
-        "patch_embed_4_5.json",
-        "stage5.json",
-        "connector.json",
-        "decoder_attention.json",
-        "decoder_ffn.json",
+        "patch_embed_B.json",
+        "encoder_attention_B.json",
+        "encoder_ffn_B.json",
+        "connector_B.json",
+        "decoder_attention_B.json",
+        "decoder_ffn_B.json",
     ]
 
-    # 层数放大（其余默认 1）
+    # amplify based on depth（default 1）
     multipliers = {
-        "stage4.json": args.stage4_layers,
-        "decoder_attention.json": args.dec_layers,
-        "decoder_ffn.json": args.dec_layers,
+        "encoder_attention_B.json": args.enc_layers,
+        "encoder_ffn_B.json": args.enc_layers,
+        "decoder_attention_B.json": args.dec_layers,
+        "decoder_ffn_B.json": args.dec_layers,
     }
 
-    # —— 跑每个环节，按层数放大，保存“环节级”结果（用于环节占比）
+    # # fastvlm
+    # stages = [
+    #     "stem_stage123.json",
+    #     "stage4.json",
+    #     "patch_embed_4_5.json",
+    #     "stage5.json",
+    #     "connector.json",
+    #     "decoder_attention.json",
+    #     "decoder_ffn.json",
+    # ]
+
+    # # amplify based on depth（default 1）
+    # multipliers = {
+    #     "stage4.json": args.stage4_layers,
+    #     "decoder_attention.json": args.dec_layers,
+    #     "decoder_ffn.json": args.dec_layers,
+    # }
+
+    # run each (and amplify)
     stage_results = {}
     for name in stages:
         path = os.path.join(args.model_dir, name)
@@ -233,12 +233,12 @@ def main():
         k = multipliers.get(name, 1)
         stage_results[name] = scale_stats(raw, k)
 
-    # —— 计算总量（环节加总）
+    # add each
     grand = empty_acc()
     for name in stages:
         add_into(grand, stage_results[name])
 
-    # —— 以算子为维度：聚合（已放大后的环节相加）
+    # ops-aspect add up
     ops = defaultdict(lambda: {"cycles": 0.0, "macs": 0.0, "energy_nj": 0.0})
     for name in stages:
         s = stage_results[name]
@@ -249,7 +249,7 @@ def main():
         for op, v in s["breakdown_energy_nj"].items():
             ops[op]["energy_nj"] += v
 
-    # —— 导出：环节层面的统计（含占比）
+    # stages stat
     import csv
     with open(stage_output_path, "w", newline="") as f:
         w = csv.writer(f)
@@ -269,7 +269,7 @@ def main():
                 f"{s['energy_nj']*1e-9:.9f}", f"{time_s:.6f}"
             ])
 
-    # —— 导出：算子层面的统计（含占比）
+    # ops stat
     total_cycles = grand["cycles"]
     total_macs   = grand["macs"]
     total_energy = grand["energy_nj"]
@@ -290,7 +290,7 @@ def main():
                 f"{v['energy_nj']*1e-9:.9f}",
             ])
 
-    # —— 输出总量
+    # output
     total_time_s = total_cycles / (args.freq_ghz * 1e9)
     with open(total_output_path, "w") as f:
         f.write("==== TOTALS (after layer expansion) ====\n")
@@ -299,7 +299,6 @@ def main():
         f.write(f"energy: {total_energy:.6f} nJ  ({total_energy*1e-9:.9f} J)\n")
         f.write(f"time@{args.freq_ghz}GHz: {total_time_s:.6f} s\n")
 
-        # —— 新增：设备×方向×类型（cycles）——
         f.write("\n==== Detailed Cycle Breakdown ====\n")
         f.write(f"cycles_read_dram:    {grand['cycles_read_dram']}\n")
         f.write(f"cycles_comp_dram:    {grand['cycles_comp_dram']}\n")
@@ -308,7 +307,6 @@ def main():
         f.write(f"cycles_comp_rram:    {grand['cycles_comp_rram']}\n")
         f.write(f"cycles_write_rram:   {grand['cycles_write_rram']}\n")
 
-        # —— 新增：设备×方向×类型（energy, nJ）——
         f.write("\n==== Detailed Energy Breakdown (nJ) ====\n")
         f.write(f"energy_read_dram:    {grand['energy_read_dram_nj']:.6f}\n")
         f.write(f"energy_comp_dram:    {grand['energy_comp_dram_nj']:.6f}\n")
@@ -317,7 +315,7 @@ def main():
         f.write(f"energy_comp_rram:    {grand['energy_comp_rram_nj']:.6f}\n")
         f.write(f"energy_write_rram:   {grand['energy_write_rram_nj']:.6f}\n")
 
-    print("跑完了, 去 result/ 看")
+    print("over, find result file at result/")
 
 if __name__ == "__main__":
     main()

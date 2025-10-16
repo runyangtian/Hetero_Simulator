@@ -1,4 +1,3 @@
-# file: simulator.py
 import math
 import numpy as np
 from typing import List, Dict, Any, Tuple
@@ -25,7 +24,7 @@ class Simulator:
         # self.ucie_energy_per_bit = 0
         self.layer_latency_max_cycles = 3 # 0.01ns/layer, 256 layer in total
     
-    # ===== 新增：把一次读/写/算的组件时间/能量，归入 DRAM / RRAM 的对应桶 =====
+    # accumulate read/write energy and cycle
     def _acc_rw(self, dev: MemoryDevice, cycles: int, energy_nj: float, is_read: bool):
         if dev is self.dram:
             if is_read:
@@ -41,7 +40,7 @@ class Simulator:
             else:
                 self.stats.cycles_write_rram += cycles
                 self.stats.energy_write_rram_nj += energy_nj
-
+    # accumulate computation energy and cycle
     def _acc_comp(self, cu: ComputeUnit, cycles: int, energy_nj: float):
         if cu is self.dram_cu:
             self.stats.cycles_comp_dram += cycles
@@ -50,6 +49,7 @@ class Simulator:
             self.stats.cycles_comp_rram += cycles
             self.stats.energy_comp_rram_nj += energy_nj
 
+    # calculate mem read cost
     def _mem_read_cost(self, dev: MemoryDevice, size_bits: int, src_layer: int = -1):
         bw_cycles = math.ceil(size_bits / dev.read_bw_bits_per_cycle) if dev.read_bw_bits_per_cycle > 0 else 0
         cycles = dev.read_latency_cycles + bw_cycles
@@ -62,6 +62,7 @@ class Simulator:
         else:
             return cycles + tsv_cycles, energy
 
+    # calculate mem write cost
     def _mem_write_cost(self, dev: MemoryDevice, size_bits: int, src_layer: int = -1):
         bw_cycles = math.ceil(size_bits / dev.write_bw_bits_per_cycle) if dev.write_bw_bits_per_cycle > 0 else 0
         cycles = dev.write_latency_cycles + bw_cycles
@@ -74,6 +75,7 @@ class Simulator:
         else:
             return cycles + tsv_cycles, energy
 
+    # calculate computation cost
     def _compute_cost_engine(self, amount_ops: int, engine: str, cu: ComputeUnit):
         if amount_ops <= 0:
             return 0, 0.0
@@ -87,8 +89,8 @@ class Simulator:
 
         return cycles, energy
 
+    # get mem_device, layer, size_bits
     def _dev_and_layer(self, tname: str):
-        """小工具：由张量名取回 (mem_device, layer, size_bits)"""
         t = self.model.tensors[tname]
         mem = self.rram if t.device == 'rram' else self.dram
         return mem, t.layer, t.bits_per_element
@@ -101,7 +103,6 @@ class Simulator:
         if ttype == 'matmul_tile':
             m, n, k = item['msize'], item['nsize'], item['ksize']
 
-            # --- 设备与层 ---
             memA, layerA, bpeA = self._dev_and_layer(op.A)
             memB, layerB, bpeB = self._dev_and_layer(op.B)
             memC, layerC, bpeC = self._dev_and_layer(op.C)
@@ -111,22 +112,18 @@ class Simulator:
             B_tile_bits = k * n * bpeB
             C_tile_bits = m * n * bpeC
 
-            # --- 读 A/B（与你原先一致）---
+            # --- read A/B---
             cA, eA = self._mem_read_cost(memA, A_tile_bits, src_layer=layerA)
             cB, eB = self._mem_read_cost(memB, B_tile_bits, src_layer=layerB)
             c_in = max(cA, cB)
 
-            # --- 选择 CU：按 C 的 device（你之前的逻辑）---
+            # --- select CU：based on C's device---
             use_rram = (memC is self.rram)
-            cu_sel = self.rram_cu if use_rram else self.dram_cu
+            cu_sel = self.rram_cu if use_rram else self.dram_cua
 
-            # --- 计算吞吐（近似）---
+
             macs = m * n * k
-
-            # 用引擎计算能量，周期
             cc, ec = self._compute_cost_engine(macs, 'mac', cu_sel)
-
-            # --- 写回 C ---
             cW, eW = self._mem_write_cost(memC, C_tile_bits, src_layer=layerC)
 
             self._acc_rw(memA, c_in, eA, is_read=True)
@@ -145,17 +142,17 @@ class Simulator:
             C_in, H, W = self.model.shapes[op.input_img].dims
             wshape = self.model.shapes[op.weight_name].dims  # [Cpatch, Cout] 或 [Cout, Cin/groups, Kh, Kw]
 
-            # === 读输入 ===
+            # === read input ===
             memI, layerI, bpeI = self._dev_and_layer(op.input_img)
             memO, layerO, bpeO = self._dev_and_layer(op.out_name)
 
             img_bits_total = C_in * H * W * bpeI
             cI, eI = self._mem_read_cost(memI, img_bits_total, src_layer=layerI)
 
-            # === 读权重 ===
+            # === read weights ===
             memW, layerW, bpeW = self._dev_and_layer(op.weight_name)
 
-            # === 输出空间尺寸 ===
+            # === height and width ===
             Ho = (H + 2*op.ph - op.kh) // op.sh + 1
             Wo = (W + 2*op.pw - op.kw) // op.sw + 1
 

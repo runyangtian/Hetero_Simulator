@@ -1,4 +1,4 @@
-# 所有张量和算子的容器。
+# Container for all tensors and ops
 
 from typing import Dict, List, Tuple
 import numpy as np

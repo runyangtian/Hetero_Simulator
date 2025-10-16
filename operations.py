@@ -1,10 +1,8 @@
-# 定义了所有神经网络的算子（操作），如矩阵乘法、注意力等。
+# Define all ops
 
 import numpy as np
 from typing import List, Dict
 from hardware_models import TensorShape
-
-# ----------------------------- Operation models -----------------------------
 
 class Op:
     def __init__(self, name: str):
@@ -57,23 +55,6 @@ class MatMul(Op):
     def required_tensors(self) -> List[str]:
         return [self.A, self.B]
 
-
-# class PatchEmbed(Op):
-#     def __init__(self, input_img: str, patch_w: int, patch_h: int, out_name: str, weight_name: str):
-#         super().__init__(f"PatchEmbed:{input_img}->{out_name}")
-#         self.input_img, self.patch_w, self.patch_h = input_img, patch_w, patch_h
-#         self.out_name, self.weight_name = out_name, weight_name
-
-#     def flops(self, shapes: Dict[str, TensorShape]) -> int:
-#         C, H, W = shapes[self.input_img].dims
-#         n_patches_h, n_patches_w = H // self.patch_h, W // self.patch_w
-#         num_patches = n_patches_h * n_patches_w
-#         patch_size = C * self.patch_h * self.patch_w
-#         out_dim = shapes[self.weight_name].dims[1]
-#         return num_patches * patch_size * out_dim
-
-#     def required_tensors(self) -> List[str]:
-#         return [self.input_img, self.weight_name]
 class Conv2D(Op):
     def __init__(self, input_img: str, weight_name: str, out_name: str,
                  kernel_h: int, kernel_w: int,
@@ -96,7 +77,6 @@ class Conv2D(Op):
 
     def flops(self, shapes: Dict[str, TensorShape]) -> int:
         C_in, H, W = shapes[self.input_img].dims
-        # weight 形状建议: [C_out, C_in/groups, K_h, K_w]
         C_out = shapes[self.weight_name].dims[0]
         Cin_per_g = C_in // max(1, self.groups)
         Ho, Wo = self._out_hw(H, W)
@@ -126,7 +106,6 @@ class AvgPool2D(Op):
     def flops(self, shapes: Dict[str, TensorShape]) -> int:
         C, H, W = shapes[self.input_img].dims
         Ho, Wo = self._out_hw(H, W)
-        # 近似：每个输出像素做 kh*kw 次累加（除法常数忽略或并入 SFE）
         return C * Ho * Wo * self.kh * self.kw
 
     def required_tensors(self) -> List[str]:
@@ -186,11 +165,9 @@ class ParallelOp(Op):
         self.branches = branches
 
     def flops(self, shapes: Dict[str, TensorShape]) -> int:
-        # 这里是逻辑 FLOPs 总和（Q,K,V 的 FLOPs 累加）
         return sum(b.flops(shapes) for b in self.branches)
 
     def required_tensors(self) -> List[str]:
-        # 所有分支需要的张量集合
         reqs = []
         for b in self.branches:
             reqs.extend(b.required_tensors())

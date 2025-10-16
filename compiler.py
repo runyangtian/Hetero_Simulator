@@ -1,4 +1,3 @@
-# file: compiler.py
 # 将高级模型描述转换为底层的、可模拟的指令序列。
 
 from typing import List, Dict, Any

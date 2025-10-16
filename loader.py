@@ -1,4 +1,4 @@
-# 负责解析 JSON 文件并构建 Model 对象。
+# Parsing JSON files and building Model objects (add tensor and op)
 
 import json
 from typing import Dict, Any
@@ -16,22 +16,22 @@ class JSONModelLoader:
 
     def build(self, spec: Dict[str, Any]) -> Model:
         m = Model()
-        # 添加 tensor
+        # add tensor
         for t in spec.get("tensors", []):
             m.add_tensor(
                 name=t["name"],
                 shape=tuple(int(x) for x in t["shape"]),
                 bits_per_element=int(t.get("bits", self.default_bits)),
                 device=t.get("device"),
-                layer=int(t.get("layer", -1))   # 新增，可默认 -1 表示未指定
+                layer=int(t.get("layer", -1)) 
             )
 
 
-        # 添加算子
+        # add op
         for o in spec.get("ops", []):
             tpe = o.get("type", "").lower()
             if tpe == 'matmul':
-                transpose_B = o.get('transpose_B', False)   # 默认 False
+                transpose_B = o.get('transpose_B', False)   # False by default
                 m.add_op(MatMul(o['A'], o['B'], o['C'], transpose_B=transpose_B))
             elif tpe == 'patchembed':
                 m.add_op(PatchEmbed(o['input_img'], int(o['patch_w']), int(o['patch_h']), o['out'], o['weight_name']))
@@ -47,14 +47,13 @@ class JSONModelLoader:
                 m.add_op(SoftmaxOp(o['A'], int(o.get('axis', -1)), o['C']))
             elif tpe == 'ucieop':
                 m.add_op(UCIeOp(int(o['size_bits'])))
+            # parallel op
             elif tpe == 'parallelops':
                 branches = []
                 for branch in o['branches']:
-                    # 递归调用自己，把 branch 解析成 Op
                     branches.append(self.build({"ops": [branch], "tensors": []}).ops[0])
                 m.add_op(ParallelOp(branches))
-            elif tpe == 'conv2d' or tpe == 'conv':   # 兼容 "Conv2D" / "Conv"
-                # 允许 stride/padding 提供单值或 [h,w]
+            elif tpe == 'conv2d' or tpe == 'conv':
                 def _pair(v):
                     if isinstance(v, list) or isinstance(v, tuple):
                         return int(v[0]), int(v[1])

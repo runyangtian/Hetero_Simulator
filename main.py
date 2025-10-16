@@ -98,7 +98,7 @@ def main():
     for k,v in stats.cycles_breakdown.items():
         print(f'  {k}: {v}')
     
-    # ===== 新增打印：细分的 cycle breakdown =====
+    # ===== cycle breakdown =====
     print('\nDetailed Cycle Breakdown:')
     print(f'  DRAM Read cycles:   {stats.cycles_read_dram}')
     print(f'  DRAM Compute cycles:{stats.cycles_comp_dram}')
@@ -107,7 +107,7 @@ def main():
     print(f'  RRAM Compute cycles:{stats.cycles_comp_rram}')
     print(f'  RRAM Write cycles:  {stats.cycles_write_rram}')
 
-    # ===== 新增打印：细分的 energy breakdown =====
+    # ===== energy breakdown =====
     print('\nDetailed Energy Breakdown (nJ):')
     print(f'  DRAM Read energy:   {stats.energy_read_dram_nj:.2f}')
     print(f'  DRAM Compute energy:{stats.energy_comp_dram_nj:.2f}')
