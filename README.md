@@ -1,6 +1,4 @@
 # Simulator for Heterogenous 3D-DRAM 3D-RRAM PIM
-how to run: 
-1. Modify ./model_json/test.json to describe your model architecture
-2. Run: python main.py
+All supported operators are defined in operations.oy
 
-TODO:
+Run: python main.py --json PATH for a single json, python run.py --model-dir PATH --enc-layers ENCODER_DEPTH --dec-layers DECODER DEPTH --freq-ghz CLK_FREQENCY for a sequence of json. 
